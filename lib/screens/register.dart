@@ -29,7 +29,7 @@ class _RegisterState extends State<Register> {
         ),
       );
 
-      final response = await NetworkService(context)
+      final response = await NetworkService()
           .post('$apiUrl/auth/registration', body: <String, String>{
         'email': emailController.text,
         'name': nameController.text,

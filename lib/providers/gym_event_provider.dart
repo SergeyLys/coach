@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'dart:math';
+import 'package:flutter_app/services/network_service.dart';
+import 'package:flutter_app/assets/constants.dart';
 
 class Exercise {
   int id;
@@ -23,36 +25,63 @@ class GymEvent {
 
   List<Exercise> exercises;
 
-  GymEvent({required this.day, required this.exercises})
-      : id = Random().nextInt(9999999);
+  GymEvent({required this.id, required this.day, required this.exercises});
+
+  factory GymEvent.fromJson(Map<String, dynamic> json) {
+    return GymEvent(
+      id: json['id'] as int,
+      day: json['day'] as String,
+      exercises: json['exercises']
+    );
+  }
 }
 
 class GymEventProvider extends ChangeNotifier {
   late List<GymEvent> _events = [
-    GymEvent(day: 'Mon', exercises: [
-      Exercise(name: "Squats 1", sets: [
-        {"w": 60, "r": 10},
-        {"w": 60, "r": 10},
-        {"w": 60, "r": 10},
-        {"w": 60, "r": 10},
-        {"w": 60, "r": 10},
-        {"w": 60, "r": 10}
-      ]),
-      Exercise(name: "Squats 2", sets: [
-        {"w": 60, "r": 10},
-        {"w": 60, "r": 10},
-        {"w": 60, "r": 10}
-      ])
-    ])
+    // GymEvent(day: 'Mon', exercises: [
+    //   Exercise(name: "Squats 1", sets: [
+    //     {"w": 60, "r": 10},
+    //     {"w": 60, "r": 10},
+    //     {"w": 60, "r": 10},
+    //     {"w": 60, "r": 10},
+    //     {"w": 60, "r": 10},
+    //     {"w": 60, "r": 10}
+    //   ]),
+    //   Exercise(name: "Squats 2", sets: [
+    //     {"w": 60, "r": 10},
+    //     {"w": 60, "r": 10},
+    //     {"w": 60, "r": 10}
+    //   ])
+    // ])
   ];
+
+  get events => _events;
 
   void setEvent(List<GymEvent> events) {
     _events = events;
     notifyListeners();
   }
 
-  List<GymEvent> getAllEvents() {
-    return _events;
+  Future<void> fetchEvent(String day) async {
+    try {
+      final response = await NetworkService()
+          .get('$apiUrl/events/$day');
+      print(response);
+      // setEvent(response);
+    } catch(e) {
+      print('== error $e');
+    }
+  }
+
+  Future<void> fetchUsersEvents() async {
+    try {
+      final response = await NetworkService()
+          .get('$apiUrl/events');
+      print(response);
+      // setEvent(response as List<GymEvent>);
+    } catch(e) {
+      print('213 error $e');
+    }
   }
 
   GymEvent getEventByDay(String day) {

@@ -172,6 +172,12 @@ class _UserEventConstructorState extends State<UserEventConstructor> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+  }
+
+  @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       initialIndex: 0,

@@ -2,25 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_app/providers/user_provider.dart';
-import 'package:flutter_app/domains/user_event.dart';
-import 'package:flutter_app/assets/constants.dart';
-
-final mockEvent = {
-  "title": 'Title',
-  "type": eventTypes['gymAppointment'],
-  "duration": 3214234,
-  "repeatable": false,
-  "repeatPattern": [],
-  "dates": [DateTime.now()],
-  "owner": 1,
-  "details": {
-    "squats": [
-      {"weight": 50, "reps": 10},
-      {"weight": 50, "reps": 10},
-      {"weight": 50, "reps": 10}
-    ]
-  }
-};
+import 'package:flutter_app/providers/gym_event_provider.dart';
+import 'package:flutter_app/screens/user_event_constructor.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -30,40 +13,47 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  late List<Map<String, dynamic>> _userEvents = [];
-
   @override
   void initState() {
     super.initState();
-    print('Component did mount ${DateTime.now()}');
-    setState(() {
-      _userEvents = [];
-    });
+    context.read<GymEventProvider>().fetchUsersEvents();
   }
 
   @override
   Widget build(BuildContext context) {
+    final String currentDay = DateFormat.E().format(DateTime.now());
+    final List<GymEvent> userEvents = context.read<GymEventProvider>().events;
+
     return Scaffold(
       appBar: AppBar(title: Text(DateFormat.yMMMEd().format(DateTime.now()))),
       body: Column(
         children: [
           Text(context.watch<UserProvider>().email),
-          (_userEvents.isNotEmpty
+          (context.read<GymEventProvider>().events.isNotEmpty
               ? ListView.builder(
                   scrollDirection: Axis.vertical,
                   shrinkWrap: true,
-                  itemCount: _userEvents.length,
+                  itemCount: userEvents.length,
                   itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Text("${_userEvents[index]['title']}"),
-                    );
+                    print(userEvents[index].day);
+                    if (userEvents[index].day == currentDay) {
+                      return ListTile(
+                        title: Text("${userEvents[index].day}"),
+                      );
+                    }
+                    return SizedBox.shrink();
                   })
               : Text("There is no event for today."))
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/event-constructor');
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserEventConstructor(),
+            ),
+          );
         },
         child: const Icon(Icons.add),
         backgroundColor: Colors.blue,

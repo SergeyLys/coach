@@ -28,7 +28,7 @@ class _LoginState extends State<Login> {
         ),
       );
 
-      final response = await NetworkService(context)
+      final response = await NetworkService()
           .post('$apiUrl/auth/login', body: <String, String>{
         'email': emailController.text,
         'password': passwordController.text,
