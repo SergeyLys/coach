@@ -1,30 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_app/assets/constants.dart';
+import 'dart:math';
 import 'package:flutter_app/providers/gym_event_provider.dart';
 import 'package:provider/src/provider.dart';
 
-class GymEventDetail extends StatefulWidget {
+class ScheduleDetail extends StatefulWidget {
   Function onChangeDetails;
 
   GymEvent event;
 
-  GymEventDetail({
+  ScheduleDetail({
     Key? key,
     required this.event,
     required this.onChangeDetails,
   }) : super(key: key);
 
   @override
-  State<GymEventDetail> createState() => _GymEventDetailState();
+  State<ScheduleDetail> createState() => _ScheduleDetailState();
 }
 
-class _GymEventDetailState extends State<GymEventDetail> {
+class _ScheduleDetailState extends State<ScheduleDetail> {
 
   void _handleAddRow() {
     context.read<GymEventProvider>().addExercise(
         widget.event.day, Exercise(
-      name: '',
-      sets: [Exercise.blankSet]
+        id: Random().nextInt(9999999),
+        name: '',
+        sets: [Exercise.blankSet]
     ));
   }
 
@@ -92,13 +93,13 @@ class _GymEventDetailState extends State<GymEventDetail> {
                           ),
                         ),
                         if (index == exercise.sets.length - 1) Container(
-                          margin: EdgeInsets.only(top: 10),
-                          child: IconButton(
-                              onPressed: () {
-                                context.read<GymEventProvider>().addEmptySet(widget.event.day, exercise.id);
-                              },
-                              icon: Icon(Icons.add)
-                          )
+                            margin: EdgeInsets.only(top: 10),
+                            child: IconButton(
+                                onPressed: () {
+                                  context.read<GymEventProvider>().addEmptySet(widget.event.day, exercise.id);
+                                },
+                                icon: Icon(Icons.add)
+                            )
                         )
                       ],
                     );
@@ -136,117 +137,10 @@ class _GymEventDetailState extends State<GymEventDetail> {
           ..._buildDetails(),
           Center(
               child: TextButton(
-            child: Text("Add exercise"),
-            onPressed: _handleAddRow,
-          )),
+                child: Text("Add exercise"),
+                onPressed: _handleAddRow,
+              )),
         ],
-      ),
-    );
-  }
-}
-
-class UserEventConstructor extends StatefulWidget {
-  const UserEventConstructor({Key? key}) : super(key: key);
-
-  @override
-  _UserEventConstructorState createState() => _UserEventConstructorState();
-}
-
-class _UserEventConstructorState extends State<UserEventConstructor> {
-  String eventType = 'Gym';
-  Map<String, dynamic> eventDetails = {};
-
-  void _handleChangeDetails(String value, String forDay) {
-    eventDetails[forDay] = value;
-  }
-
-  Widget _buildEventDetails(GymEvent value) {
-    switch (eventType) {
-      case 'Gym':
-        return GymEventDetail(
-            key: GlobalKey(),
-            event: value, onChangeDetails: _handleChangeDetails);
-      default:
-        return SizedBox.shrink();
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      initialIndex: 0,
-      length: weekDays.length,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Center(
-            child: TextFormField(
-              style: TextStyle(color: Colors.white, fontSize: 20),
-              initialValue: "Event title",
-              onChanged: (value) {
-
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter event title';
-                }
-                return null;
-              },
-            ),
-          ),
-          bottom: TabBar(
-            labelPadding: EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 10),
-            tabs: weekDays.map<Widget>((day) {
-              return Text(day);
-            }).toList(),
-          ),
-        ),
-        body: Container(
-          padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-          child: TabBarView(
-            children: [
-              ...weekDays.map<Widget>((day) {
-                if (context.read<GymEventProvider>().isEmpty(day)) {
-                  return ListView(
-                    children: [
-                      _buildEventDetails(
-                          context.watch<GymEventProvider>().getEventByDay(day)),
-                      Container(
-                          margin: EdgeInsets.fromLTRB(0, 15, 0, 0),
-                          child: Column(
-                            children: [
-                              ElevatedButton(
-                                onPressed: () {},
-                                child: const Text(
-                                  'Save changes',
-                                ),
-                              ),
-                            ],
-                          )),
-                    ],
-                  );
-                }
-
-                return Center(
-                    child: TextButton(
-                  child: Text("Add exercise"),
-                  onPressed: () {
-                    context.read<GymEventProvider>().addExercise(
-                        day, Exercise(
-                        name: '',
-                        sets: [Exercise.blankSet]
-                    ));
-                  },
-                ));
-              }).toList(),
-            ],
-          ),
-        ),
       ),
     );
   }

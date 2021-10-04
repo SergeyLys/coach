@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_app/providers/user_provider.dart';
 import 'package:flutter_app/providers/gym_event_provider.dart';
-import 'package:flutter_app/screens/user_event_constructor.dart';
+import 'package:flutter_app/screens/schedule_constructor/schedule_constructor.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -28,7 +27,6 @@ class _HomeState extends State<Home> {
       appBar: AppBar(title: Text(DateFormat.yMMMEd().format(DateTime.now()))),
       body: Column(
         children: [
-          Text(context.watch<UserProvider>().email),
           (context.read<GymEventProvider>().events.isNotEmpty
               ? ListView.builder(
                   scrollDirection: Axis.vertical,
@@ -51,7 +49,7 @@ class _HomeState extends State<Home> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => UserEventConstructor(),
+              builder: (context) => ScheduleConstructor(),
             ),
           );
         },

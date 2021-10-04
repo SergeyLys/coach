@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'dart:math';
+import 'dart:convert';
 import 'package:flutter_app/services/network_service.dart';
 import 'package:flutter_app/assets/constants.dart';
 
@@ -13,9 +14,21 @@ class Exercise {
   static Map<String, int> blankSet = {"w": 0, "r": 0};
 
   Exercise({
+    required this.id,
     required this.name,
     required this.sets,
-  }) : id = Random().nextInt(9999999);
+  });
+
+  factory Exercise.fromJson(Map<String, dynamic> json) {
+    return Exercise(
+        id: json['id'] as int,
+        name: json['name'] as String,
+        sets: json['sets'].map<Map<String, int>>((set) => ({
+          "w": set["w"] as int,
+          "r": set["r"] as int
+        })).toList()
+    );
+  }
 }
 
 class GymEvent {
@@ -31,29 +44,13 @@ class GymEvent {
     return GymEvent(
       id: json['id'] as int,
       day: json['day'] as String,
-      exercises: json['exercises']
+      exercises: json['exercises'].map<Exercise>((exercise) => Exercise.fromJson(exercise)).toList() as List<Exercise>
     );
   }
 }
 
 class GymEventProvider extends ChangeNotifier {
-  late List<GymEvent> _events = [
-    // GymEvent(day: 'Mon', exercises: [
-    //   Exercise(name: "Squats 1", sets: [
-    //     {"w": 60, "r": 10},
-    //     {"w": 60, "r": 10},
-    //     {"w": 60, "r": 10},
-    //     {"w": 60, "r": 10},
-    //     {"w": 60, "r": 10},
-    //     {"w": 60, "r": 10}
-    //   ]),
-    //   Exercise(name: "Squats 2", sets: [
-    //     {"w": 60, "r": 10},
-    //     {"w": 60, "r": 10},
-    //     {"w": 60, "r": 10}
-    //   ])
-    // ])
-  ];
+  late List<GymEvent> _events = [];
 
   get events => _events;
 
@@ -62,12 +59,17 @@ class GymEventProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<GymEvent> parseEvents(String responseBody) {
+    final parsed = jsonDecode(responseBody).cast<Map<String, dynamic>>();
+
+    return parsed.map<GymEvent>((json) => GymEvent.fromJson(json)).toList();
+  }
+
   Future<void> fetchEvent(String day) async {
     try {
       final response = await NetworkService()
           .get('$apiUrl/events/$day');
-      print(response);
-      // setEvent(response);
+      setEvent(parseEvents(response));
     } catch(e) {
       print('== error $e');
     }
@@ -77,8 +79,8 @@ class GymEventProvider extends ChangeNotifier {
     try {
       final response = await NetworkService()
           .get('$apiUrl/events');
-      print(response);
-      // setEvent(response as List<GymEvent>);
+      final events = parseEvents(response);
+      setEvent(events);
     } catch(e) {
       print('213 error $e');
     }
@@ -98,7 +100,7 @@ class GymEventProvider extends ChangeNotifier {
     if (_events.any((element) => element.day == day)) {
       event = _events.firstWhere((element) => element.day == day);
     } else {
-      event = GymEvent(day: day, exercises: []);
+      event = GymEvent(id: Random().nextInt(9999999), day: day, exercises: []);
       _events.add(event);
     }
 
