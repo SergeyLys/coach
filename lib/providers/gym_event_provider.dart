@@ -91,34 +91,42 @@ class GymEventProvider extends ChangeNotifier {
   }
 
   bool isEmpty(String day) {
-    return _events.any((element) => element.day == day);
+    return _events.any((element) => element.day == day && element.exercises.isNotEmpty);
   }
 
-  void addExercise(String day, Exercise exercise) {
-    final GymEvent event;
-
-    if (_events.any((element) => element.day == day)) {
-      event = _events.firstWhere((element) => element.day == day);
-    } else {
-      event = GymEvent(id: Random().nextInt(9999999), day: day, exercises: []);
-      _events.add(event);
+  Future<void> addExercise(String day, Exercise exercise) async {
+    // final GymEvent event;
+    //
+    // if (_events.any((element) => element.day == day)) {
+    //   event = _events.firstWhere((element) => element.day == day);
+    // } else {
+    //   event = GymEvent(id: Random().nextInt(9999999), day: day, exercises: []);
+    //   _events.add(event);
+    // }
+    //
+    // event.exercises.add(exercise);
+    try {
+      final response = await NetworkService().post(
+          '$apiUrl/exercise',
+          body: <String, dynamic>{
+            'name': exercise.name,
+            'sets': exercise.sets,
+            'eventName': day
+          });
+      print(response);
+    } catch(e) {
+      print('error $e');
     }
-
-    event.exercises.add(exercise);
 
     notifyListeners();
   }
 
-  void removeExercise(String day, int exerciseId) {
-    final event = getEventByDay(day);
+  void removeExercise(GymEvent event, int exerciseId) {
     event.exercises.removeWhere((row) => row.id == exerciseId);
     notifyListeners();
   }
 
-  void setExerciseName(String day, int exerciseId, String name) {
-    final event = getEventByDay(day);
-    final exercise =
-        event.exercises.firstWhere((element) => element.id == exerciseId);
+  void setExerciseName(Exercise exercise, String name) {
     exercise.name = name;
     notifyListeners();
   }
@@ -128,6 +136,11 @@ class GymEventProvider extends ChangeNotifier {
     final exercise =
         event.exercises.firstWhere((element) => element.id == exerciseId);
     exercise.sets.add(Exercise.blankSet);
+    notifyListeners();
+  }
+
+  void editExerciseSet(Exercise exercise, int index, String field, int value) {
+    exercise.sets[index] = {...exercise.sets[index], field: value};
     notifyListeners();
   }
 }

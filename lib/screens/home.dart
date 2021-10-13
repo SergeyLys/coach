@@ -15,46 +15,53 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    context.read<GymEventProvider>().fetchUsersEvents();
   }
 
   @override
   Widget build(BuildContext context) {
-    final String currentDay = DateFormat.E().format(DateTime.now());
-    final List<GymEvent> userEvents = context.read<GymEventProvider>().events;
-
     return Scaffold(
       appBar: AppBar(title: Text(DateFormat.yMMMEd().format(DateTime.now()))),
       body: Column(
         children: [
-          (context.read<GymEventProvider>().events.isNotEmpty
-              ? ListView.builder(
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                  itemCount: userEvents.length,
-                  itemBuilder: (context, index) {
-                    print(userEvents[index].day);
-                    if (userEvents[index].day == currentDay) {
-                      return ListTile(
-                        title: Text("${userEvents[index].day}"),
-                      );
-                    }
-                    return SizedBox.shrink();
-                  })
-              : Text("There is no event for today."))
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ScheduleConstructor(),
+          Flexible(
+            flex: 1,
+            child: Container(
+              color: Colors.orangeAccent,
+              child: Center(
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                    Icon(Icons.food_bank_outlined, size: 70, color: Colors.white),
+                    Text('Nutrition', style: TextStyle(fontSize: 40, color: Colors.white))
+                  ],)
+              ),
             ),
-          );
-        },
-        child: const Icon(Icons.add),
-        backgroundColor: Colors.blue,
+          ),
+          Flexible(
+            flex: 1,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ScheduleConstructor(),
+                  ),
+                );
+              },
+              child: Container(
+                color: Colors.lightBlueAccent,
+                child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.sports, size: 70, color: Colors.white),
+                        Text('Sports', style: TextStyle(fontSize: 40, color: Colors.white))
+                      ],)
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

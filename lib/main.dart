@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/providers/schedule_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
 import 'package:flutter_app/providers/gym_event_provider.dart';
@@ -23,6 +24,9 @@ class App extends StatelessWidget {
         ),
         ChangeNotifierProvider<GymEventProvider>(
           create: (context) => GymEventProvider(),
+        ),
+        ChangeNotifierProvider<ScheduleProvider>(
+          create: (context) => ScheduleProvider(),
         ),
       ],
 

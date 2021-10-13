@@ -4,14 +4,11 @@ import 'package:flutter_app/providers/gym_event_provider.dart';
 import 'package:provider/src/provider.dart';
 
 class ScheduleDetail extends StatefulWidget {
-  Function onChangeDetails;
-
   GymEvent event;
 
   ScheduleDetail({
     Key? key,
     required this.event,
-    required this.onChangeDetails,
   }) : super(key: key);
 
   @override
@@ -31,6 +28,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
 
   Widget _buildRow(Exercise exercise) {
     return Stack(
+      key: GlobalKey(),
       children: [
         Container(
           padding: EdgeInsets.only(left: 15, right: 15, bottom: 15, top: 10),
@@ -45,7 +43,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                 decoration: InputDecoration(labelText: "Exercise"),
                 initialValue: exercise.name,
                 onChanged: (value) {
-                  context.read<GymEventProvider>().setExerciseName(widget.event.day, exercise.id, value);
+                  context.read<GymEventProvider>().setExerciseName(exercise, value);
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -62,33 +60,32 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                   separatorBuilder: (BuildContext context, int index) =>
                       SizedBox(width: 10),
                   itemBuilder: (context, index) {
+                    print('$index ${exercise.sets[index]}');
                     return Row(
                       children: [
                         Container(
                           width: 30,
                           child: TextFormField(
-                            focusNode: FocusNode(),
                             style: TextStyle(fontSize: 14),
                             initialValue: exercise.sets[index]['w'].toString(),
                             decoration: InputDecoration(
                               label: Text("Weight", style: TextStyle(fontSize: 10)),
                             ),
                             onChanged: (value) {
-                              // widget.onChangeDetails(value, widget.forDay);
+                              context.read<GymEventProvider>().editExerciseSet(exercise, index, 'w', int.parse(value));
                             },
                           ),
                         ),
                         Container(
                           width: 30,
                           child: TextFormField(
-                            focusNode: FocusNode(),
                             style: TextStyle(fontSize: 14),
                             initialValue: exercise.sets[index]['r'].toString(),
                             decoration: InputDecoration(
                               label: Text("Reps", style: TextStyle(fontSize: 10)),
                             ),
                             onChanged: (value) {
-                              // widget.onChangeDetails(value, widget.forDay);
+                              context.read<GymEventProvider>().editExerciseSet(exercise, index, 'r', int.parse(value));
                             },
                           ),
                         ),
@@ -114,7 +111,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
           right: 0,
           child: IconButton(
             onPressed: () {
-              context.read<GymEventProvider>().removeExercise(widget.event.day, exercise.id);
+              context.read<GymEventProvider>().removeExercise(widget.event, exercise.id);
             },
             icon: Icon(Icons.close),
           ),
