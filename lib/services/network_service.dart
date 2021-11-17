@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluIiwiaWQiOjEsImlhdCI6MTYzNDExOTUwNiwiZXhwIjoxNjM0MjA1OTA2fQ.SDzBAHn_zFUxG1JHzIDuPKeoOReVzSNL8VzkP2vBsFE';
+const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluIiwiaWQiOjEsImlhdCI6MTYzNzA3MzY5MywiZXhwIjoxNjM3MTYwMDkzfQ.qLGuoL0hIOrLa-Y3Nj1T8ECyWHhQngeAWmHm-p40e_8';
 
 class NetworkService {
   static String _token = token;
@@ -39,6 +39,24 @@ class NetworkService {
         .post(Uri.parse(url), body: jsonEncode(body), headers: {
           "content-type": "application/json",
           'Authorization': 'Bearer $_token'
+    });
+    return _processResponse(response);
+  }
+
+  Future<dynamic> patch(String url, {body}) async {
+    final response = await http
+        .patch(Uri.parse(url), body: jsonEncode(body), headers: {
+      "content-type": "application/json",
+      'Authorization': 'Bearer $_token'
+    });
+    return _processResponse(response);
+  }
+
+  Future<dynamic> delete(String url) async {
+    final response = await http
+        .delete(Uri.parse(url), headers: {
+      "content-type": "application/json",
+      'Authorization': 'Bearer $_token'
     });
     return _processResponse(response);
   }

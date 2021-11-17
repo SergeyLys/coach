@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/providers/schedule_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
-import 'package:flutter_app/providers/gym_event_provider.dart';
 import 'package:flutter_app/screens/login.dart';
 import 'package:flutter_app/screens/home.dart';
 import 'package:flutter_app/screens/register.dart';
@@ -21,9 +20,6 @@ class App extends StatelessWidget {
       providers: [
         ChangeNotifierProvider<UserProvider>(
           create: (context) => UserProvider(),
-        ),
-        ChangeNotifierProvider<GymEventProvider>(
-          create: (context) => GymEventProvider(),
         ),
         ChangeNotifierProvider<ScheduleProvider>(
           create: (context) => ScheduleProvider(),

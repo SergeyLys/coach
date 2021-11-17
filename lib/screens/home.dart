@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_app/providers/gym_event_provider.dart';
 import 'package:flutter_app/screens/schedule_constructor/schedule_constructor.dart';
 
 class Home extends StatefulWidget {
@@ -64,19 +62,5 @@ class _HomeState extends State<Home> {
         ],
       ),
     );
-  }
-}
-
-class UserEvents extends StatefulWidget {
-  const UserEvents({Key? key}) : super(key: key);
-
-  @override
-  _UserEventsState createState() => _UserEventsState();
-}
-
-class _UserEventsState extends State<UserEvents> {
-  @override
-  Widget build(BuildContext context) {
-    return Container();
   }
 }

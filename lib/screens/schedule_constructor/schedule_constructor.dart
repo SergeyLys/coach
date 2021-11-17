@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/providers/schedule_provider.dart';
-import 'dart:math';
 import 'package:provider/src/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_app/providers/gym_event_provider.dart';
 import 'package:flutter_app/assets/constants.dart';
-import 'package:flutter_app/screens/schedule_constructor/schedule_detail.dart';
+import 'package:flutter_app/domains/gym_event.dart';
+import 'package:flutter_app/domains/exercise.dart';
 
 class ScheduleConstructor extends StatefulWidget {
   const ScheduleConstructor({Key? key}) : super(key: key);
@@ -15,132 +14,218 @@ class ScheduleConstructor extends StatefulWidget {
 }
 
 class _ScheduleConstructorState extends State<ScheduleConstructor> {
-  final String _currentDay = DateFormat.E().format(DateTime.now());
+  List<Widget> _buildExercises(GymEvent event) {
+    final currentDate = context.read<ScheduleProvider>().currentDate;
+    final forToday = event.day == context.read<ScheduleProvider>().today;
 
-  Widget _buildEventDetails(GymEvent value) {
-    return ScheduleDetail(
-        key: GlobalKey(),
-        event: value);
-  }
+    return event.exercises.map<Widget>((exercise) {
+      final maxDate = context.read<ScheduleProvider>().getLatestDate(exercise);
 
-  Widget _buildSaveButton() {
-    return Container(
-        margin: EdgeInsets.fromLTRB(0, 15, 0, 0),
-        child: Column(
-          children: [
-            ElevatedButton(
-              onPressed: () {},
-              child: const Text(
-                'Save changes',
-              ),
+      if (forToday && maxDate != currentDate) {
+        context.read<ScheduleProvider>().updateSets(exercise);
+      }
+
+      return Stack(
+        key: ValueKey(exercise.id),
+        children: [
+          Container(
+            padding: EdgeInsets.only(left: 15, right: 15, bottom: 15, top: 30),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.blueAccent),
+              borderRadius: BorderRadius.all(Radius.circular(5.0)),
             ),
-          ],
-        ));
-  }
-
-  Future<void> getEvents() {
-    return context.read<GymEventProvider>().fetchUsersEvents();
-  }
-
-  Future<void> getSchedules() {
-    return context.read<ScheduleProvider>().fetchSchedules();
+            margin: EdgeInsets.only(bottom: 15),
+            child: Column(
+              children: [
+                TextFormField(
+                  decoration: InputDecoration(
+                      labelText: "Exercise",
+                  ),
+                  initialValue: exercise.name,
+                  onChanged: (value) {
+                    context.read<ScheduleProvider>().setExerciseName(
+                        exercise, value);
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter value';
+                    }
+                    return null;
+                  },
+                ),
+                Container(
+                  height: 50,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: exercise.sets[maxDate]!.length,
+                    separatorBuilder: (BuildContext context, int index) =>
+                        SizedBox(width: 10),
+                    itemBuilder: (context, index) {
+                      return Row(
+                        children: [
+                          Container(
+                            width: 30,
+                            child: TextFormField(
+                              style: TextStyle(fontSize: 14),
+                              initialValue: exercise.sets[maxDate]![index]['w']
+                                  .toString(),
+                              decoration: InputDecoration(
+                                label: Text(
+                                    "Weight", style: TextStyle(fontSize: 10)),
+                              ),
+                              onChanged: (value) {
+                                context.read<ScheduleProvider>()
+                                    .editExerciseSet(
+                                      exercise,
+                                      forToday ? currentDate : maxDate,
+                                      index,
+                                      'w',
+                                      int.parse(value)
+                                    );
+                              },
+                            ),
+                          ),
+                          Container(
+                            width: 30,
+                            child: TextFormField(
+                              style: TextStyle(fontSize: 14),
+                              initialValue: exercise.sets[maxDate]![index]['r']
+                                  .toString(),
+                              decoration: InputDecoration(
+                                  label: Text(
+                                      "Reps", style: TextStyle(fontSize: 10)),
+                              ),
+                              onChanged: (value) {
+                                context.read<ScheduleProvider>()
+                                    .editExerciseSet(
+                                      exercise,
+                                      forToday ? currentDate : maxDate,
+                                      index,
+                                      'r',
+                                      int.parse(value)
+                                  );
+                              },
+                            ),
+                          ),
+                          if (index == exercise.sets[maxDate]!.length - 1) Container(
+                              margin: EdgeInsets.only(top: 10),
+                              child: IconButton(
+                                  onPressed: () {
+                                    context.read<ScheduleProvider>()
+                                        .addEmptySet(exercise, forToday ? currentDate : maxDate);
+                                  },
+                                  icon: Icon(Icons.add)
+                              )
+                          )
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: IconButton(
+              onPressed: () {
+                context.read<ScheduleProvider>().removeExercise(exercise);
+              },
+              icon: Icon(Icons.close),
+            ),
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            child: IconButton(
+              onPressed: () {
+                context.read<ScheduleProvider>().editExercise(exercise);
+              },
+              icon: exercise.hasChanges
+                  ? Icon(Icons.check, size: 25, color: Colors.green,)
+                  : Icon(Icons.check, size: 20, color: Colors.grey),
+            ),
+          ),
+        ],
+      );
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: context.read<ScheduleProvider>().fetchSchedules(),
+      builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+        final isLoading = snapshot.connectionState == ConnectionState.waiting;
+        final sortedEvents = weekDays.map((day) {
+          return context.read<ScheduleProvider>().schedule!.events.firstWhere((element) => element.day == day);
+        });
 
+        return DefaultTabController(
+          initialIndex: weekDays.indexOf(context.read<ScheduleProvider>().today),
+          length: weekDays.length,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Center(
+                child: Text(DateFormat.yMMMEd().format(DateTime.now())),
+              ),
+              bottom: isLoading || context.watch<ScheduleProvider>().schedule == null ? PreferredSize(
+                child: Container(),
+                preferredSize: Size(0.0, 0.0),
+              ) : TabBar(
+                labelPadding: EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 10),
+                tabs: weekDays.map<Widget>((day) => Text(day)).toList(),
+              ),
+            ),
+            body: isLoading ? Center(child: CircularProgressIndicator()) : Container(
+              padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+              child: Container(
+                child: Center(
+                  child: context.watch<ScheduleProvider>().schedule == null ? TextButton(
+                    child: Text("Create Schedule"),
+                    onPressed: () {
+                      context.read<ScheduleProvider>().createSchedule(weekDays);
+                    },
+                  ) : TabBarView(
+                    children: sortedEvents.map<Widget>((event) {
+                      if (context.read<ScheduleProvider>().isEmptyEvent(event.id)) {
+                        return Container(
+                          margin: EdgeInsets.only(bottom: 15, top: 15),
+                          child: ListView(
+                            children: [
+                              ..._buildExercises(event),
+                              Center(
+                                  child: TextButton(
+                                    child: Text("Add exercise"),
+                                    onPressed: () {
+                                      context.read<ScheduleProvider>().addExercise(
+                                          event
+                                      );
+                                    },
+                                  ))
+                            ],
+                          ),
+                        );
+                      }
 
-      return Scaffold(
-        appBar: AppBar(
-          title: Center(
-            child: Text(DateFormat.yMMMEd().format(DateTime.now())),
-          ),
-        ),
-        body: Container(
-          padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-          child: FutureBuilder(
-            future: getSchedules(),
-            builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              }
-
-              if (context.watch<ScheduleProvider>().schedules.isEmpty) {
-                return Container(
-                  child: Center(
-                    child: TextButton(
-                      child: Text("Create Schedule"),
-                      onPressed: () {
-                        context.read<ScheduleProvider>().createSchedule(weekDays);
-                      },
-                    ),
+                      return Center(
+                          child: TextButton(
+                            child: Text("Add exercise"),
+                            onPressed: () {
+                              context.read<ScheduleProvider>().addExercise(
+                                  event
+                              );
+                            },
+                          ));
+                    }).toList(),
                   ),
-                );
-              }
-
-              return SizedBox.shrink();
-            },
+                ),
+              ),
+            ),
           ),
-        ),
-      );
-
-
-    // return DefaultTabController(
-    //   initialIndex: weekDays.indexOf(_currentDay),
-    //   length: weekDays.length,
-    //   child: Scaffold(
-    //     appBar: AppBar(
-    //       title: Center(
-    //         child: Text(DateFormat.yMMMEd().format(DateTime.now())),
-    //       ),
-    //       bottom: TabBar(
-    //         labelPadding: EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 10),
-    //         tabs: weekDays.map<Widget>((day) => Text(day)).toList(),
-    //       ),
-    //     ),
-    //     body: Container(
-    //       padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-    //       child: FutureBuilder(
-    //         future: getSchedules(),
-    //         builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-    //
-    //           if (snapshot.connectionState == ConnectionState.waiting) {
-    //             return Center(child: CircularProgressIndicator());
-    //           }
-    //
-    //           return TabBarView(
-    //             children: [
-    //               ...weekDays.map<Widget>((day) {
-    //                 if (context.read<GymEventProvider>().isEmpty(day)) {
-    //                   return ListView(
-    //                     children: [
-    //                       _buildEventDetails(
-    //                           context.watch<GymEventProvider>().getEventByDay(day)),
-    //                       _buildSaveButton(),
-    //                     ],
-    //                   );
-    //                 }
-    //
-    //                 return Center(
-    //                     child: TextButton(
-    //                       child: Text("Add exercise"),
-    //                       onPressed: () {
-    //                         context.read<GymEventProvider>().addExercise(
-    //                             day, Exercise(
-    //                             id: Random().nextInt(9999999),
-    //                             name: '',
-    //                             sets: [Exercise.blankSet]
-    //                         ));
-    //                       },
-    //                     ));
-    //               }).toList(),
-    //             ],
-    //           );
-    //         },
-    //       ),
-    //     ),
-    //   ),
-    // );
+        );
+      }
+    );
   }
 }

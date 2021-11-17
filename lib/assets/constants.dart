@@ -7,4 +7,4 @@ final Map<String, String> eventTypes = {
   'meeting': 'Meeting',
 };
 
-final List<String> weekDays = DateFormat.E().dateSymbols.SHORTWEEKDAYS;
+final List<String> weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

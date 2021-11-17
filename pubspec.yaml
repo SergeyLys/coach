@@ -39,6 +39,7 @@ dependencies:
   intl: ^0.17.0
   provider: ^6.0.0
   flutter_session: ^0.1.1
+  collection: ^1.15.0
 
 dev_dependencies:
   flutter_test:
