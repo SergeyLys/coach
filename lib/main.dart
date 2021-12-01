@@ -28,7 +28,7 @@ class App extends StatelessWidget {
 
       child: MaterialApp(
         title: 'Test',
-        home: Home(),
+        home: Login(),
         routes: {
           "/login": (context) => Login(),
           "/register": (context) => Register(),

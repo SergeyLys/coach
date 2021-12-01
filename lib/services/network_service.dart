@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluIiwiaWQiOjEsImlhdCI6MTYzNzA3MzY5MywiZXhwIjoxNjM3MTYwMDkzfQ.qLGuoL0hIOrLa-Y3Nj1T8ECyWHhQngeAWmHm-p40e_8';
-
 class NetworkService {
-  static String _token = token;
+  static String _token = '';
 
   dynamic _processResponse(response) {
     final res = jsonDecode(response.body);
@@ -23,7 +21,7 @@ class NetworkService {
       _token = res['token'];
     }
 
-    return response.body;
+    return jsonDecode(response.body);
   }
 
   Future<dynamic> get(String url) async {

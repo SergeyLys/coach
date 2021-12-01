@@ -27,9 +27,8 @@ class ScheduleProvider extends ChangeNotifier {
     return schedule!.events.any((element) => element.id == id && element.exercises.isNotEmpty);
   }
   
-  List<Schedule> parseEntities(String responseBody) {
-    final parsed = jsonDecode(responseBody).cast<Map<String, dynamic>>();
-    final result = parsed.map<Schedule>((json) {
+  List<Schedule> parseEntities(List<dynamic> responseBody) {
+    final result = responseBody.map<Schedule>((json) {
       return Schedule.fromJson(json);
     }).toList();
     return result;
