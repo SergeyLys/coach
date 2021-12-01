@@ -18,6 +18,15 @@ class Exercise {
     required this.updatedAt,
   });
 
+  List<ParsedSet> setsToList() {
+    return [
+      new ParsedSet(new DateTime(2017, 9, 19), 5),
+      new ParsedSet(new DateTime(2017, 9, 26), 25),
+      new ParsedSet(new DateTime(2017, 10, 3), 100),
+      new ParsedSet(new DateTime(2017, 10, 10), 75),
+    ];
+  }
+
   factory Exercise.fromJson(Map<String, dynamic> json) {
     return Exercise(
         id: json['id'] as int,
@@ -27,4 +36,11 @@ class Exercise {
         sets: Map<String, List<dynamic>>.from(json['sets'])
     );
   }
+}
+
+class ParsedSet {
+  final DateTime date;
+  final int weight;
+
+  ParsedSet(this.date, this.weight);
 }

@@ -5,7 +5,7 @@ import 'package:flutter_app/providers/user_provider.dart';
 import 'package:flutter_app/screens/login.dart';
 import 'package:flutter_app/screens/home.dart';
 import 'package:flutter_app/screens/register.dart';
-import 'package:flutter_app/screens/schedule_constructor/schedule_constructor.dart';
+import 'package:flutter_app/screens/sports/schedule_constructor.dart';
 
 void main() {
   runApp(const App());
@@ -33,7 +33,6 @@ class App extends StatelessWidget {
           "/login": (context) => Login(),
           "/register": (context) => Register(),
           "/home": (context) => Home(),
-          "/event-constructor": (context) => ScheduleConstructor(),
         },
       ),
     );

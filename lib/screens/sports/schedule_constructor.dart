@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/domains/exercise.dart';
 import 'package:flutter_app/providers/schedule_provider.dart';
 import 'package:provider/src/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_app/assets/constants.dart';
 import 'package:flutter_app/domains/gym_event.dart';
-import 'package:flutter_app/domains/exercise.dart';
+import 'package:charts_flutter/flutter.dart' as charts;
 
 class ScheduleConstructor extends StatefulWidget {
   const ScheduleConstructor({Key? key}) : super(key: key);
@@ -24,6 +25,9 @@ class _ScheduleConstructorState extends State<ScheduleConstructor> {
       if (forToday && maxDate != currentDate) {
         context.read<ScheduleProvider>().updateSets(exercise);
       }
+
+      print(exercise.name);
+      print(exercise.setsToList());
 
       return Stack(
         key: ValueKey(exercise.id),
@@ -116,11 +120,23 @@ class _ScheduleConstructorState extends State<ScheduleConstructor> {
                                   },
                                   icon: Icon(Icons.add)
                               )
-                          )
+                          ),
                         ],
                       );
                     },
                   ),
+                ),
+                if (exercise.setsToList().isNotEmpty) charts.LineChart(
+                    [
+                      charts.Series<ParsedSet, DateTime>(
+                        id: exercise.id.toString(),
+                        colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
+                        domainFn: (ParsedSet set, _) => set.date,
+                        measureFn: (ParsedSet set, _) => set.weight,
+                        data: exercise.setsToList(),
+                      ),
+                    ],
+                    animate: false
                 ),
               ],
             ),
@@ -154,78 +170,71 @@ class _ScheduleConstructorState extends State<ScheduleConstructor> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: context.read<ScheduleProvider>().fetchSchedules(),
-      builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-        final isLoading = snapshot.connectionState == ConnectionState.waiting;
-        final sortedEvents = weekDays.map((day) {
-          return context.read<ScheduleProvider>().schedule!.events.firstWhere((element) => element.day == day);
-        });
+    final sortedEvents = weekDays.map((day) =>
+        context.read<ScheduleProvider>().schedule!.events.firstWhere((element) => element.day == day)
+    );
+    return DefaultTabController(
+      initialIndex: weekDays.indexOf(context.read<ScheduleProvider>().today),
+      length: weekDays.length,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Center(
+            child: Text(DateFormat.yMMMEd().format(DateTime.now())),
+          ),
+          bottom: context.watch<ScheduleProvider>().schedule == null ? PreferredSize(
+            child: Container(),
+            preferredSize: Size(0.0, 0.0),
+          ) : TabBar(
+            labelPadding: EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 10),
+            tabs: weekDays.map<Widget>((day) => Text(day)).toList(),
+          ),
+        ),
+        body: Container(
+          padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+          child: Container(
+            child: Center(
+              child: context.watch<ScheduleProvider>().schedule == null ? TextButton(
+                child: Text("Create Schedule"),
+                onPressed: () {
+                  context.read<ScheduleProvider>().createSchedule(weekDays);
+                },
+              ) : TabBarView(
+                children: sortedEvents.map<Widget>((event) {
+                  if (context.read<ScheduleProvider>().isEmptyEvent(event.id)) {
+                    return Container(
+                      margin: EdgeInsets.only(bottom: 15, top: 15),
+                      child: ListView(
+                        children: [
+                          ..._buildExercises(event),
+                          Center(
+                              child: TextButton(
+                                child: Text("Add exercise"),
+                                onPressed: () {
+                                  context.read<ScheduleProvider>().addExercise(
+                                      event
+                                  );
+                                },
+                              ))
+                        ],
+                      ),
+                    );
+                  }
 
-        return DefaultTabController(
-          initialIndex: weekDays.indexOf(context.read<ScheduleProvider>().today),
-          length: weekDays.length,
-          child: Scaffold(
-            appBar: AppBar(
-              title: Center(
-                child: Text(DateFormat.yMMMEd().format(DateTime.now())),
-              ),
-              bottom: isLoading || context.watch<ScheduleProvider>().schedule == null ? PreferredSize(
-                child: Container(),
-                preferredSize: Size(0.0, 0.0),
-              ) : TabBar(
-                labelPadding: EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 10),
-                tabs: weekDays.map<Widget>((day) => Text(day)).toList(),
-              ),
-            ),
-            body: isLoading ? Center(child: CircularProgressIndicator()) : Container(
-              padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-              child: Container(
-                child: Center(
-                  child: context.watch<ScheduleProvider>().schedule == null ? TextButton(
-                    child: Text("Create Schedule"),
-                    onPressed: () {
-                      context.read<ScheduleProvider>().createSchedule(weekDays);
-                    },
-                  ) : TabBarView(
-                    children: sortedEvents.map<Widget>((event) {
-                      if (context.read<ScheduleProvider>().isEmptyEvent(event.id)) {
-                        return Container(
-                          margin: EdgeInsets.only(bottom: 15, top: 15),
-                          child: ListView(
-                            children: [
-                              ..._buildExercises(event),
-                              Center(
-                                  child: TextButton(
-                                    child: Text("Add exercise"),
-                                    onPressed: () {
-                                      context.read<ScheduleProvider>().addExercise(
-                                          event
-                                      );
-                                    },
-                                  ))
-                            ],
-                          ),
-                        );
-                      }
-
-                      return Center(
-                          child: TextButton(
-                            child: Text("Add exercise"),
-                            onPressed: () {
-                              context.read<ScheduleProvider>().addExercise(
-                                  event
-                              );
-                            },
-                          ));
-                    }).toList(),
-                  ),
-                ),
+                  return Center(
+                      child: TextButton(
+                        child: Text("Add exercise"),
+                        onPressed: () {
+                          context.read<ScheduleProvider>().addExercise(
+                              event
+                          );
+                        },
+                      ));
+                }).toList(),
               ),
             ),
           ),
-        );
-      }
+        ),
+      ),
     );
   }
 }

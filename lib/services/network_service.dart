@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluIiwiaWQiOjEsImlhdCI6MTYzNzA3MzY5MywiZXhwIjoxNjM3MTYwMDkzfQ.qLGuoL0hIOrLa-Y3Nj1T8ECyWHhQngeAWmHm-p40e_8';
+const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluIiwiaWQiOjEsImlhdCI6MTYzNzIzMjgwOSwiZXhwIjoxNjM3MzE5MjA5fQ.QPLKVaoMSV76FPLh08sVzyNiDRmO2Ty4hgj3Sja0xlk';
 
 class NetworkService {
   static String _token = token;

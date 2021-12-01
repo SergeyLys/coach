@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/screens/sports/sports.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_app/screens/schedule_constructor/schedule_constructor.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -42,7 +42,7 @@ class _HomeState extends State<Home> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ScheduleConstructor(),
+                    builder: (context) => Sports(),
                   ),
                 );
               },
@@ -52,7 +52,7 @@ class _HomeState extends State<Home> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.sports, size: 70, color: Colors.white),
+                        Icon(Icons.fitness_center, size: 70, color: Colors.white),
                         Text('Sports', style: TextStyle(fontSize: 40, color: Colors.white))
                       ],)
                 ),
