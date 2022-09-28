@@ -34,6 +34,8 @@ class _LoginState extends State<Login> {
         'password': passwordController.text.toString(),
       });
 
+      print(response);
+
       context.read<UserProvider>().setUser(response['user']);
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();

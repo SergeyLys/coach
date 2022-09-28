@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/components/main_screen.dart';
+import 'package:flutter_app/domains/schedule.dart';
+import 'package:flutter_app/providers/event_provider.dart';
+import 'package:flutter_app/providers/event_provider.dart';
+import 'package:flutter_app/providers/event_provider.dart';
 import 'package:flutter_app/providers/schedule_provider.dart';
+import 'package:flutter_app/providers/user_provider.dart';
 import 'package:provider/src/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_app/assets/constants.dart';
-import 'package:flutter_app/domains/gym_event.dart';
+import 'package:flutter_app/domains/gym_event_trainee.dart';
 import 'package:flutter_app/domains/exercise.dart';
 
-class ScheduleConstructor extends StatefulWidget {
-  const ScheduleConstructor({Key? key}) : super(key: key);
+class TraineeScreen extends StatefulWidget {
+  const TraineeScreen({Key? key}) : super(key: key);
 
   @override
-  _ScheduleConstructorState createState() => _ScheduleConstructorState();
+  _TraineeScreenState createState() => _TraineeScreenState();
 }
 
-class _ScheduleConstructorState extends State<ScheduleConstructor> {
-  List<Widget> _buildExercises(GymEvent event) {
-    final currentDate = context.read<ScheduleProvider>().currentDate;
-    final forToday = event.day == context.read<ScheduleProvider>().today;
+class _TraineeScreenState extends State<TraineeScreen> {
+  List<Widget> _buildExercises(TraineeEvent event) {
+    final currentDate = context.read<EventProvider>().currentDate;
+    final forToday = event.day == context.read<EventProvider>().today;
 
     return event.exercises.map<Widget>((exercise) {
-      final maxDate = context.read<ScheduleProvider>().getLatestDate(exercise);
+      final maxDate = context.read<EventProvider>().getLatestDate(exercise);
 
       if (forToday && maxDate != currentDate) {
-        context.read<ScheduleProvider>().updateSets(exercise);
+        context.read<EventProvider>().updateSets(exercise);
       }
 
       return Stack(
@@ -39,11 +45,11 @@ class _ScheduleConstructorState extends State<ScheduleConstructor> {
               children: [
                 TextFormField(
                   decoration: InputDecoration(
-                      labelText: "Exercise",
+                    labelText: "Exercise",
                   ),
                   initialValue: exercise.name,
                   onChanged: (value) {
-                    context.read<ScheduleProvider>().setExerciseName(
+                    context.read<EventProvider>().setExerciseName(
                         exercise, value);
                   },
                   validator: (value) {
@@ -74,14 +80,14 @@ class _ScheduleConstructorState extends State<ScheduleConstructor> {
                                     "Weight", style: TextStyle(fontSize: 10)),
                               ),
                               onChanged: (value) {
-                                context.read<ScheduleProvider>()
+                                context.read<EventProvider>()
                                     .editExerciseSet(
-                                      exercise,
-                                      forToday ? currentDate : maxDate,
-                                      index,
-                                      'w',
-                                      int.parse(value)
-                                    );
+                                    exercise,
+                                    forToday ? currentDate : maxDate,
+                                    index,
+                                    'w',
+                                    int.parse(value)
+                                );
                               },
                             ),
                           ),
@@ -92,18 +98,18 @@ class _ScheduleConstructorState extends State<ScheduleConstructor> {
                               initialValue: exercise.sets[maxDate]![index]['r']
                                   .toString(),
                               decoration: InputDecoration(
-                                  label: Text(
-                                      "Reps", style: TextStyle(fontSize: 10)),
+                                label: Text(
+                                    "Reps", style: TextStyle(fontSize: 10)),
                               ),
                               onChanged: (value) {
-                                context.read<ScheduleProvider>()
+                                context.read<EventProvider>()
                                     .editExerciseSet(
-                                      exercise,
-                                      forToday ? currentDate : maxDate,
-                                      index,
-                                      'r',
-                                      int.parse(value)
-                                  );
+                                    exercise,
+                                    forToday ? currentDate : maxDate,
+                                    index,
+                                    'r',
+                                    int.parse(value)
+                                );
                               },
                             ),
                           ),
@@ -111,7 +117,7 @@ class _ScheduleConstructorState extends State<ScheduleConstructor> {
                               margin: EdgeInsets.only(top: 10),
                               child: IconButton(
                                   onPressed: () {
-                                    context.read<ScheduleProvider>()
+                                    context.read<EventProvider>()
                                         .addEmptySet(exercise, forToday ? currentDate : maxDate);
                                   },
                                   icon: Icon(Icons.add)
@@ -130,7 +136,7 @@ class _ScheduleConstructorState extends State<ScheduleConstructor> {
             right: 0,
             child: IconButton(
               onPressed: () {
-                context.read<ScheduleProvider>().removeExercise(exercise);
+                context.read<EventProvider>().removeExercise(event, exercise.id);
               },
               icon: Icon(Icons.close),
             ),
@@ -139,9 +145,9 @@ class _ScheduleConstructorState extends State<ScheduleConstructor> {
             top: 0,
             left: 0,
             child: IconButton(
-              onPressed: () {
-                context.read<ScheduleProvider>().editExercise(exercise);
-              },
+              onPressed: exercise.hasChanges ? () {
+                context.read<EventProvider>().editExercise(exercise);
+              } : null,
               icon: exercise.hasChanges
                   ? Icon(Icons.check, size: 25, color: Colors.green,)
                   : Icon(Icons.check, size: 20, color: Colors.grey),
@@ -154,42 +160,21 @@ class _ScheduleConstructorState extends State<ScheduleConstructor> {
 
   @override
   Widget build(BuildContext context) {
+    final userId = context.read<UserProvider>().id;
     return FutureBuilder(
-      future: context.read<ScheduleProvider>().fetchSchedules(),
-      builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-        final isLoading = snapshot.connectionState == ConnectionState.waiting;
-        final sortedEvents = weekDays.map((day) {
-          return context.read<ScheduleProvider>().schedule!.events.firstWhere((element) => element.day == day);
-        });
+        future: context.read<EventProvider>().fetchEventsByUserId(userId),
+        builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+          final sortedEvents = weekDays.map((day) {
+            return context.watch<EventProvider>().events.firstWhere((element) => element.day == day);
+          });
 
-        return DefaultTabController(
-          initialIndex: weekDays.indexOf(context.read<ScheduleProvider>().today),
-          length: weekDays.length,
-          child: Scaffold(
-            appBar: AppBar(
-              title: Center(
-                child: Text(DateFormat.yMMMEd().format(DateTime.now())),
-              ),
-              bottom: isLoading || context.watch<ScheduleProvider>().schedule == null ? PreferredSize(
-                child: Container(),
-                preferredSize: Size(0.0, 0.0),
-              ) : TabBar(
-                labelPadding: EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 10),
-                tabs: weekDays.map<Widget>((day) => Text(day)).toList(),
-              ),
-            ),
-            body: isLoading ? Center(child: CircularProgressIndicator()) : Container(
+          return MainScreen(
+            child: Container(
               padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
               child: Container(
                 child: Center(
-                  child: context.watch<ScheduleProvider>().schedule == null ? TextButton(
-                    child: Text("Create Schedule"),
-                    onPressed: () {
-                      context.read<ScheduleProvider>().createSchedule(weekDays);
-                    },
-                  ) : TabBarView(
-                    children: sortedEvents.map<Widget>((event) {
-                      if (context.read<ScheduleProvider>().isEmptyEvent(event.id)) {
+                    child: TabBarView(
+                      children: sortedEvents.map<Widget>((event) {
                         return Container(
                           margin: EdgeInsets.only(bottom: 15, top: 15),
                           child: ListView(
@@ -199,7 +184,7 @@ class _ScheduleConstructorState extends State<ScheduleConstructor> {
                                   child: TextButton(
                                     child: Text("Add exercise"),
                                     onPressed: () {
-                                      context.read<ScheduleProvider>().addExercise(
+                                      context.read<EventProvider>().addExercise(
                                           event
                                       );
                                     },
@@ -207,25 +192,13 @@ class _ScheduleConstructorState extends State<ScheduleConstructor> {
                             ],
                           ),
                         );
-                      }
-
-                      return Center(
-                          child: TextButton(
-                            child: Text("Add exercise"),
-                            onPressed: () {
-                              context.read<ScheduleProvider>().addExercise(
-                                  event
-                              );
-                            },
-                          ));
-                    }).toList(),
-                  ),
+                      }).toList(),
+                    )
                 ),
               ),
-            ),
-          ),
-        );
-      }
+            )
+          );
+        }
     );
   }
 }

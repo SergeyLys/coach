@@ -5,9 +5,11 @@ import 'package:http/http.dart' as http;
 class NetworkService {
   static String _token = '';
 
-  dynamic _processResponse(response) {
+  dynamic _processResponse(url, response) {
     final res = jsonDecode(response.body);
     final int statusCode = response.statusCode;
+
+    print('$url $statusCode');
 
     if (statusCode < 200 || statusCode > 400) {
       if (res is Map<String, dynamic> && res.containsKey('message')) {
@@ -21,6 +23,8 @@ class NetworkService {
       _token = res['token'];
     }
 
+    print(response.body);
+
     return jsonDecode(response.body);
   }
 
@@ -29,7 +33,7 @@ class NetworkService {
       'Authorization': 'Bearer $_token'
     });
 
-    return _processResponse(response);
+    return _processResponse(url, response);
   }
 
   Future<dynamic> post(String url, {body}) async {
@@ -38,7 +42,7 @@ class NetworkService {
           "content-type": "application/json",
           'Authorization': 'Bearer $_token'
     });
-    return _processResponse(response);
+    return _processResponse(url, response);
   }
 
   Future<dynamic> patch(String url, {body}) async {
@@ -47,7 +51,7 @@ class NetworkService {
       "content-type": "application/json",
       'Authorization': 'Bearer $_token'
     });
-    return _processResponse(response);
+    return _processResponse(url, response);
   }
 
   Future<dynamic> delete(String url) async {
@@ -56,6 +60,6 @@ class NetworkService {
       "content-type": "application/json",
       'Authorization': 'Bearer $_token'
     });
-    return _processResponse(response);
+    return _processResponse(url, response);
   }
 }

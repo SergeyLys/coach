@@ -9,30 +9,14 @@ import 'package:flutter_app/domains/gym_event.dart';
 import 'package:flutter_app/domains/schedule.dart';
 
 class ScheduleProvider extends ChangeNotifier {
-  final String _currentDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
-  final String _today = DateFormat.E().format(DateTime.now());
   Schedule? _schedule;
+  List<Schedule> _schedules = [];
 
   Schedule? get schedule => _schedule;
 
-  String get currentDate => _currentDate;
+  List<Schedule> get schedules => _schedules;
 
-  String get today => _today;
-
-  GymEvent getEventById(int id) {
-    return schedule!.events.firstWhere((element) => element.id == id);
-  }
-
-  bool isEmptyEvent(int id) {
-    return schedule!.events.any((element) => element.id == id && element.exercises.isNotEmpty);
-  }
-  
-  List<Schedule> parseEntities(List<dynamic> responseBody) {
-    final result = responseBody.map<Schedule>((json) {
-      return Schedule.fromJson(json);
-    }).toList();
-    return result;
-  }
+  List<Schedule> parseEntities(List<dynamic> responseBody) => responseBody.map<Schedule>((json) => Schedule.fromJson(json)).toList();
 
   Future<void> fetchSchedules() async {
     try {
@@ -42,108 +26,59 @@ class ScheduleProvider extends ChangeNotifier {
 
       final result = parseEntities(response);
 
-      _schedule = result.first;
+      if (result.isEmpty) {
+        await createSchedule('name', weekDays);
+        return;
+      }
+
+      _schedules = result;
+      notifyListeners();
     } catch(e) {
       print('fetchSchedules error $e');
     }
   }
 
-  Future<void> createSchedule(List<String> weekdays) async {
+  Future<void> createSchedule(String name, List<String> weekdays) async {
     try {
       final response = await NetworkService().post(
           '$apiUrl/schedule',
-          body: {"weekdays": weekdays});
+          body: {"weekdays": weekdays, "name": name});
 
-      final result = Schedule.fromJson(jsonDecode(response));
+      final result = Schedule.fromJson(response);
 
-      _schedule = result;
+      _schedules.add(result);
       notifyListeners();
     } catch(e) {
       print('createSchedule error $e');
     }
   }
 
-  Future<void> addExercise(GymEvent event) async {
-    final currentIndex = weekDays.indexOf(today);
-    final selectedIndex = weekDays.indexOf(event.day);
-    final dayDifference = currentIndex - selectedIndex;
-    final parsedDate = DateTime.parse(currentDate);
-    final date = DateTime(parsedDate.year, parsedDate.month, parsedDate.day - dayDifference);
-
+  Future<void> updateSchedule(int scheduleId, String name) async {
     try {
-      final response = await NetworkService().post(
-          '$apiUrl/exercise',
-          body: <String, dynamic>{
-            'eventId': event.id,
-            'date': date
-          });
-      final result = Exercise.fromJson(jsonDecode(response));
-      event.exercises.add(result);
+      final response = await NetworkService().patch(
+          '$apiUrl/schedule/$scheduleId',
+          body: {"name": name});
+      final result = Schedule.fromJson(response);
+      final updatedItem = _schedules.firstWhere((element) => element.id == result.id);
+
+      updatedItem.name = result.name;
+
       notifyListeners();
     } catch(e) {
-      print('addExercise error $e');
+      print('updateSchedule error $e');
     }
   }
 
-  Future<void> removeExercise(Exercise exercise) async {
-    final event = schedule!.events.firstWhere((element) => element.exercises.firstWhereOrNull((ex) => ex.id == exercise.id) != null);
+  Future<void> deleteSchedule(int scheduleId) async {
     try {
       await NetworkService().delete(
-          '$apiUrl/exercise/${exercise.id}');
-      event.exercises.removeWhere((element) => element.id == exercise.id);
+          '$apiUrl/schedule/$scheduleId');
+
+      _schedules.removeWhere((element) => element.id == scheduleId);
+
       notifyListeners();
     } catch(e) {
-      print('removeExercise error $e');
+      print('deleteSchedule error $e');
     }
-  }
-
-  Future<void> editExercise(Exercise exercise) async {
-    try {
-      await NetworkService().patch(
-          '$apiUrl/exercise/${exercise.id}',
-          body: {
-            "name": exercise.name,
-            "sets": exercise.sets,
-          }
-      );
-      exercise.hasChanges = false;
-      notifyListeners();
-    } catch(e) {
-      print('editExercise error $e');
-    }
-  }
-
-  String getLatestDate(Exercise exercise) {
-    final buffer = [];
-    for (final mapEntry in exercise.sets.entries) {
-      buffer.add(mapEntry.key);
-    }
-    final maxDate = buffer.reduce((a,b) => DateTime.parse(a as String).isAfter(DateTime.parse(b as String)) ? a : b);
-
-    return maxDate;
-  }
-
-  void updateSets(Exercise exercise) {
-    final maxDate = getLatestDate(exercise);
-    final latestSets = exercise.sets[maxDate];
-    exercise.sets[currentDate] = [...latestSets!];
-  }
-
-  void addEmptySet(Exercise exercise, String date) {
-    exercise.sets[date]!.add(Exercise.blankSet);
-    exercise.hasChanges = true;
-    notifyListeners();
-  }
-
-  void setExerciseName(Exercise exercise, String name) {
-    exercise.name = name;
-    exercise.hasChanges = true;
-    notifyListeners();
-  }
-
-  void editExerciseSet(Exercise exercise, String date, int index, String field, int value) {
-    exercise.sets[date]![index] = {...exercise.sets[date]![index], field: value};
-    exercise.hasChanges = true;
-    notifyListeners();
   }
 }
