@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-const String apiUrl="http://0.0.0.0:3005";
+const String apiUrl="http://localhost:3005";
 
 final Map<String, String> eventTypes = {
   'gymAppointment': 'Gym',
@@ -8,3 +8,5 @@ final Map<String, String> eventTypes = {
 };
 
 final List<String> weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+final List<String> userRoles = <String>['Client', 'Coach'];

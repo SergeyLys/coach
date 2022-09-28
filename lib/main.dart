@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/providers/event_provider.dart';
 import 'package:flutter_app/providers/schedule_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
 import 'package:flutter_app/screens/login.dart';
 import 'package:flutter_app/screens/home.dart';
 import 'package:flutter_app/screens/register.dart';
-import 'package:flutter_app/screens/schedule_constructor/schedule_constructor.dart';
+import 'package:flutter_app/screens/client/schedule_list.dart';
 
 void main() {
   runApp(const App());
@@ -24,6 +25,9 @@ class App extends StatelessWidget {
         ChangeNotifierProvider<ScheduleProvider>(
           create: (context) => ScheduleProvider(),
         ),
+        ChangeNotifierProvider<EventProvider>(
+          create: (context) => EventProvider(),
+        ),
       ],
 
       child: MaterialApp(
@@ -33,7 +37,7 @@ class App extends StatelessWidget {
           "/login": (context) => Login(),
           "/register": (context) => Register(),
           "/home": (context) => Home(),
-          "/event-constructor": (context) => ScheduleConstructor(),
+          "/schedule-list": (context) => ScheduleList(),
         },
       ),
     );

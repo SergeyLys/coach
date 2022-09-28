@@ -6,6 +6,7 @@ class UserProvider extends ChangeNotifier {
 
   String get email => _user.email;
   int get id => _user.id;
+  String get role => _user.role;
 
   void setUser(Map<String, dynamic> responseData) {
     _user = User.fromJson(responseData);

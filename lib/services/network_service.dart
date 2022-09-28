@@ -9,6 +9,8 @@ class NetworkService {
     final res = jsonDecode(response.body);
     final int statusCode = response.statusCode;
 
+    print(statusCode);
+
     if (statusCode < 200 || statusCode > 400) {
       if (res is Map<String, dynamic> && res.containsKey('message')) {
         throw res['message'];

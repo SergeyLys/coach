@@ -19,6 +19,7 @@ class _RegisterState extends State<Register> {
   final nameController = TextEditingController();
   final passwordController = TextEditingController();
   String _errorMessage = '';
+  String userRoleValue = userRoles.first;
 
   Future<void> handleSubmit() async {
     try {
@@ -34,6 +35,7 @@ class _RegisterState extends State<Register> {
         'email': emailController.text,
         'name': nameController.text,
         'password': passwordController.text,
+        'role': userRoleValue.toUpperCase(),
       });
 
       context.read<UserProvider>().setUser(response['user']);
@@ -74,7 +76,7 @@ class _RegisterState extends State<Register> {
                   ),
                   TextFormField(
                     decoration: InputDecoration(labelText: "Name"),
-                    controller: emailController,
+                    controller: nameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your name';
@@ -91,6 +93,24 @@ class _RegisterState extends State<Register> {
                       }
                       return null;
                     },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: userRoleValue,
+                    icon: const Icon(Icons.arrow_downward),
+                    elevation: 16,
+                    style: const TextStyle(color: Colors.black),
+                    decoration: InputDecoration(labelText: "Role"),
+                    onChanged: (String? value) {
+                      setState(() {
+                        userRoleValue = value!;
+                      });
+                    },
+                    items: userRoles.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
                   ),
                   Container(
                     margin: EdgeInsets.fromLTRB(0, 15, 0, 0),
