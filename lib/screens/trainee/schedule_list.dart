@@ -39,8 +39,8 @@ class _ScheduleListState extends State<ScheduleList> {
         final schedules = context.watch<ScheduleProvider>().schedules;
 
         return DefaultTabController(
-          initialIndex: weekDays.indexOf(context.read<EventProvider>().today),
-          length: weekDays.length,
+          initialIndex: weekDaysShort.indexOf(context.read<EventProvider>().today),
+          length: weekDaysShort.length,
           child: Scaffold(
             appBar: AppBar(
               title: const Center(
@@ -60,6 +60,7 @@ class _ScheduleListState extends State<ScheduleList> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
+                              // builder: (context) => TraineeScreen(),
                               builder: (context) => TraineeScreen(),
                             ),
                           )
@@ -109,7 +110,7 @@ class _ScheduleListState extends State<ScheduleList> {
 
                           if (name == null || name.isEmpty) return;
 
-                          context.read<ScheduleProvider>().createSchedule(name, weekDays);
+                          context.read<ScheduleProvider>().createSchedule(name, weekDaysShort);
                         },
                       )
                   )

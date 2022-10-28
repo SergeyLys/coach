@@ -29,24 +29,26 @@ class _CoachScreenState extends State<CoachScreen> {
         builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
           print(context.read<EventProvider>().events);
           return MainScreen(
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-              child: Container(
-                child: Center(
-                    child: TabBarView(
-                      children: [
-                        Text('Test 1'),
-                        Text('Test 2'),
-                        Text('Test 3'),
-                        Text('Test 4'),
-                        Text('Test 5'),
-                        Text('Test 6'),
-                        Text('Test 7'),
-                      ],
-                    )
+            child: () {
+              return Container(
+                padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                child: Container(
+                  child: Center(
+                      child: TabBarView(
+                        children: [
+                          Text('Test 1'),
+                          Text('Test 2'),
+                          Text('Test 3'),
+                          Text('Test 4'),
+                          Text('Test 5'),
+                          Text('Test 6'),
+                          Text('Test 7'),
+                        ],
+                      )
+                  ),
                 ),
-              ),
-            )
+              );
+            }
           );
         }
     );

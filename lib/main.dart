@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/providers/event_provider.dart';
+import 'package:flutter_app/providers/exercises_provider.dart';
 import 'package:flutter_app/providers/schedule_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
+import 'package:flutter_app/providers/exercise_provider.dart';
 import 'package:flutter_app/screens/login.dart';
 import 'package:flutter_app/screens/home.dart';
 import 'package:flutter_app/screens/register.dart';
@@ -27,6 +29,12 @@ class App extends StatelessWidget {
         ),
         ChangeNotifierProvider<EventProvider>(
           create: (context) => EventProvider(),
+        ),
+        ChangeNotifierProvider<ExerciseProvider>(
+          create: (context) => ExerciseProvider(),
+        ),
+        ChangeNotifierProvider<ExercisesProvider>(
+          create: (context) => ExercisesProvider(),
         ),
       ],
 

@@ -27,7 +27,7 @@ class ScheduleProvider extends ChangeNotifier {
       final result = parseEntities(response);
 
       if (result.isEmpty) {
-        await createSchedule('name', weekDays);
+        await createSchedule('name', weekDaysShort);
         return;
       }
 

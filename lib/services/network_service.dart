@@ -9,7 +9,7 @@ class NetworkService {
     final res = jsonDecode(response.body);
     final int statusCode = response.statusCode;
 
-    print('$url $statusCode');
+    print('NetworkService $url $statusCode ${response.body}');
 
     if (statusCode < 200 || statusCode > 400) {
       if (res is Map<String, dynamic> && res.containsKey('message')) {
@@ -22,8 +22,6 @@ class NetworkService {
     if (res is Map<String, dynamic> && res.containsKey('token')) {
       _token = res['token'];
     }
-
-    print(response.body);
 
     return jsonDecode(response.body);
   }
