@@ -4,11 +4,12 @@ import 'package:flutter_app/providers/exercises_provider.dart';
 import 'package:flutter_app/providers/schedule_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
-import 'package:flutter_app/providers/exercise_provider.dart';
 import 'package:flutter_app/screens/login.dart';
 import 'package:flutter_app/screens/home.dart';
 import 'package:flutter_app/screens/register.dart';
 import 'package:flutter_app/screens/trainee/schedule_list.dart';
+import 'package:flutter_app/screens/wizard_event/wizard_event_screen.dart';
+
 
 void main() {
   runApp(const App());
@@ -30,9 +31,6 @@ class App extends StatelessWidget {
         ChangeNotifierProvider<EventProvider>(
           create: (context) => EventProvider(),
         ),
-        ChangeNotifierProvider<ExerciseProvider>(
-          create: (context) => ExerciseProvider(),
-        ),
         ChangeNotifierProvider<ExercisesProvider>(
           create: (context) => ExercisesProvider(),
         ),
@@ -46,6 +44,7 @@ class App extends StatelessWidget {
           "/register": (context) => Register(),
           "/home": (context) => Home(),
           "/schedule-list": (context) => ScheduleList(),
+          "/wizard-event": (context) => WizardEvent(),
         },
       ),
     );

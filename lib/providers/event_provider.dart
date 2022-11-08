@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_app/domains/sets.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:collection/collection.dart';
@@ -9,27 +11,39 @@ import 'package:flutter_app/domains/gym_event_trainee.dart';
 import 'package:flutter_app/domains/schedule.dart';
 
 class EventProvider extends ChangeNotifier {
-  final String _currentDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
-  final String _today = DateFormat.E().format(DateTime.now());
   List<TraineeEvent> _events = [];
-
   List<TraineeEvent> get events => _events;
 
+  final String _currentDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
   String get currentDate => _currentDate;
 
+  final String _today = DateFormat.E().format(DateTime.now());
   String get today => _today;
+
+  bool isLoading = false;
+
 
   TraineeEvent getEventById(int id) {
     return events.firstWhere((element) => element.id == id);
+  }
+
+  TraineeEvent? getEventByExerciseId(int id) {
+    if (events.isEmpty) return null;
+    return events.cast<TraineeEvent?>().firstWhere((element) => element?.exercise.id == id, orElse: () => null);
   }
 
   List<TraineeEvent> parseTraineeEntities(List<dynamic> responseBody) => responseBody.map<TraineeEvent>((json) => TraineeEvent.fromJson(json)).toList();
 
   Future<void> fetchEventsByUserId(int userId) async {
     try {
+      isLoading = true;
+      notifyListeners();
+
       final response = await NetworkService().get(
           '$apiUrl/events/by-user/$userId'
       );
+
+      isLoading = false;
 
       print(response);
       // final result = parseTraineeEntities(response);
@@ -41,126 +55,266 @@ class EventProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> createEventFromCatalog(int exerciseId) async {
+  Future<void> createEventFromCatalog(int exerciseId, DateTime date, List<String> selectedDays, bool useSmartFiller) async {
     try {
+      isLoading = true;
+      notifyListeners();
+
       final response = await NetworkService().post(
           '$apiUrl/events',
           body: {
-            'ExerciseID': exerciseId
+            'exerciseID': exerciseId,
+            'date': date.toString(),
+            'repeatDays': selectedDays,
+            'smartFiller': useSmartFiller
           }
       );
 
-      print(response);
+      final result = TraineeEvent.fromJson(response);
+
+      final overlap = _events.indexWhere((element) => element.id == result.id);
+
+      if (overlap > -1) {
+        _events[overlap] = result;
+      } else {
+        _events.add(result);
+      }
+
+      isLoading = false;
+      notifyListeners();
     } catch(e) {
       print('createEventFromCatalog error $e');
     }
   }
 
-  Future<void> createOwnEvent() async {
+  Future<void> fetchUsersEventsByDate(int userId, DateTime start, DateTime end) async {
     try {
+      final bool shouldFetchEvents = _events.where((element) {
+        final foundStartSets = element.sets.where((setModel) =>
+          DateTime.parse(setModel.date).isAtSameMomentAs(start)
+        );
+        final foundEndSets = element.sets.where((setModel) =>
+            DateTime.parse(setModel.date).isAtSameMomentAs(end)
+        );
+        return foundStartSets.isNotEmpty || foundEndSets.isNotEmpty;
+      }).isEmpty;
 
-    } catch (e) {
+      if (!shouldFetchEvents) {
+        return;
+      }
 
-    }
-  }
+      isLoading = true;
+      notifyListeners();
 
-  Future<void> fetchUsersEventsByDate(int userId, List<dynamic> dates) async {
-    try {
-      // final List<String> parsedDates = dates.map((element) => element.toString());
       final response = await NetworkService().get(
-          '$apiUrl/events/by-user/$userId?from=${dates[0].toString()}&to=${dates[dates.length-1].toString()}'
+          '$apiUrl/events/by-user/$userId?from=${start.toString()}&to=${end.toString()}'
       );
 
-      print(response);
-      // final result = parseTraineeEntities(response);
-      //
-      // _events = result;
+      final List<TraineeEvent> result = response.map<TraineeEvent>((json) => TraineeEvent.fromJson(json)).toList();
+
+      _events = result;
+
+      isLoading = false;
       notifyListeners();
     } catch(e) {
-      print('fetchEvents error $e');
+      print('fetchUsersEventsByDate error $e');
     }
   }
 
-  Future<void> addExercise(TraineeEvent event) async {
-    final currentIndex = weekDaysShort.indexOf(today);
-    final selectedIndex = weekDaysShort.indexOf(event.day);
-    final dayDifference = currentIndex - selectedIndex;
-    final parsedDate = DateTime.parse(currentDate);
-    final date = DateTime(parsedDate.year, parsedDate.month, parsedDate.day - dayDifference);
+  List<TraineeEvent> extractEventsByDate(DateTime date) {
+    final currentEvents = events.where((element) {
 
+      element.sets.sort((a, b) => a.date.compareTo(b.date));
+
+      final setsForCurrentDate = element.sets.where((setModel) {
+        return DateUtils.isSameDay(DateTime.parse(setModel.date).toLocal(), date);
+      });
+
+      if (element.smartFiller) {
+        final isDayMatched = element.repeatDays.contains(DateFormat(DateFormat.ABBR_WEEKDAY).format(date));
+        final isAfterDate = DateTime.parse(element.sets.first.date).isBefore(date);
+        final isSameDate = DateUtils.isSameDay(DateTime.parse(element.sets.first.date).toLocal(), date);
+        final isAfterOrSame = isAfterDate || isSameDate;
+
+        if (setsForCurrentDate.isNotEmpty) {
+          return (isDayMatched && isAfterOrSame) && setsForCurrentDate.where((element) => element.isDeactivated).isEmpty;
+        }
+
+        return (isDayMatched && isAfterOrSame);
+      }
+
+      return setsForCurrentDate.isNotEmpty;
+    }).toList();
+
+    return currentEvents;
+  }
+
+  SetsModel extractSets(TraineeEvent event, DateTime date) {
+
+    event.sets.sort((a, b) => a.date.compareTo(b.date));
+
+    final currentSets = event.sets.cast<SetsModel?>().firstWhere((element) =>
+        DateUtils.isSameDay(DateTime.parse(element?.date as String).toLocal(), date),
+        orElse: () => null
+    );
+
+    final lastCompleted = event.sets.lastWhere((element) => element.reps.last.reps != null && element.reps.last.weight != null);
+
+    if (currentSets == null) {
+      final newSets = SetsModel(
+          date: date.toString(),
+          reps: lastCompleted.reps.map((el) =>
+              RepsModel(weight: el.weight, reps: el.reps, order: el.order)
+          ).toList()
+      );
+      newSets.isVirtual = true;
+      event.sets.add(newSets);
+      return newSets;
+    }
+
+    // print('$date '
+    //     'currentSets.id: ${currentSets.id} '
+    //     'currentSets.reps.first.id: ${currentSets.reps.first.id} '
+    //     'reps: ${currentSets.reps.first.reps} isDeactivated: ${currentSets.isDeactivated}');
+
+    if (DateTime.parse(currentSets.date).isAfter(DateTime.parse(lastCompleted.date))) {
+      currentSets.reps = lastCompleted.reps.map((e) => RepsModel(weight: e.weight, reps: e.reps, order: e.order)).toList();
+    }
+
+    currentSets.reps.sort((a, b) => a.order.compareTo(b.order));
+
+    return currentSets;
+  }
+
+  void addSet(SetsModel sets) {
     try {
-      final response = await NetworkService().post(
-          '$apiUrl/exercise',
-          body: <String, dynamic>{
-            'eventId': event.id,
-            'date': date.toString()
-          });
-      final result = Exercise.fromJson(response);
-      event.exercises.add(result);
+      final RepsModel createdRep = RepsModel(weight: null, reps: null, order: sets.reps.length+1);
+      sets.reps.add(createdRep);
       notifyListeners();
     } catch(e) {
-      print('addExercise error $e');
+      print('addSet error $e');
     }
   }
 
-  Future<void> removeExercise(TraineeEvent event, int exerciseId) async {
+  Future<void> removeSet(SetsModel sets) async {
     try {
+      final idForDelete = sets.reps.last.id;
+
+      sets.reps.removeLast();
+      notifyListeners();
+
+      if (idForDelete == null) return;
+
+      isLoading = true;
+      notifyListeners();
+
       await NetworkService().delete(
-          '$apiUrl/exercise/$exerciseId');
-      event.exercises.removeWhere((element) => element.id == exerciseId);
+          '$apiUrl/reps/$idForDelete',
+      );
+
+      isLoading = false;
+      notifyListeners();
+    } catch(e) {
+      print('removeSet error $e');
+    }
+  }
+
+  void editSetWeight(SetsModel sets, int index, int value) {
+    try {
+      sets.reps[index].weight = value;
+      sets.isChanged = true;
+      notifyListeners();
+    } catch(e) {
+      print('editSetWeight error $e');
+    }
+  }
+
+  void editSetReps(SetsModel sets, int index, int value) {
+    try {
+      sets.reps[index].reps = value;
+      sets.isChanged = true;
+      notifyListeners();
+    } catch(e) {
+      print('editSetWeight error $e');
+    }
+  }
+
+  Future<void> saveChanges(TraineeEvent event, SetsModel sets, DateTime date) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+      final currentIndex = event.sets.indexOf(sets);
+      var mergedSetsModel = sets;
+
+
+      if (sets.isVirtual) {
+        final response = await NetworkService().post(
+            '$apiUrl/sets/create',
+            body: {
+              'date': date.toString(),
+              'eventID': event.id
+            }
+        );
+        response['reps'] = [];
+        final result = SetsModel.fromJson(response);
+        mergedSetsModel = result;
+        mergedSetsModel.reps = sets.reps.map((e) => RepsModel(weight: e.weight, reps: e.reps, order: e.order)).toList();
+      }
+      //
+      final response = await NetworkService().post(
+          '$apiUrl/reps/save',
+          body: {
+            'items': mergedSetsModel.reps.map((item) => {
+              'setsID': mergedSetsModel.id,
+              'id': item.id,
+              'weight': item.weight,
+              'reps': item.reps,
+              'order': item.order,
+            }).toList()
+          }
+      );
+      final List<RepsModel> result = response.map<RepsModel>((element) => RepsModel.fromJson(element)).toList();
+      mergedSetsModel.reps = result;
+      mergedSetsModel.isChanged = false;
+      mergedSetsModel.isVirtual = false;
+      event.sets.removeAt(currentIndex);
+      event.sets.insert(currentIndex, mergedSetsModel);
+      isLoading = false;
+      notifyListeners();
+    } catch(e) {
+      print('saveEvent error $e');
+    }
+  }
+
+
+  Future<void> removeExercise(TraineeEvent event, SetsModel sets) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+
+      if (sets.isVirtual) {
+        sets.isDeactivated = true;
+        isLoading = false;
+        print(sets.isVirtual);
+        print(sets.isDeactivated);
+        notifyListeners();
+        return;
+      }
+
+      await NetworkService().post(
+        '$apiUrl/sets/destroy',
+        body: {
+            'eventID': event.id,
+            'id': sets.id
+        }
+      );
+
+      event.sets.removeWhere((element) => element.id == sets.id);
+
+      isLoading = false;
       notifyListeners();
     } catch(e) {
       print('removeExercise error $e');
     }
-  }
-
-  Future<void> editExercise(Exercise exercise) async {
-    // try {
-    //   await NetworkService().patch(
-    //       '$apiUrl/exercise/${exercise.id}',
-    //       body: {
-    //         "name": exercise.name,
-    //         "sets": exercise.sets,
-    //       }
-    //   );
-    //   exercise.hasChanges = false;
-    //   notifyListeners();
-    // } catch(e) {
-    //   print('editExercise error $e');
-    // }
-  }
-
-  // String getLatestDate(Exercise exercise) {
-    // final buffer = [];
-    // for (final mapEntry in exercise.sets.entries) {
-    //   buffer.add(mapEntry.key);
-    // }
-    // final maxDate = buffer.reduce((a,b) => DateTime.parse(a as String).isAfter(DateTime.parse(b as String)) ? a : b);
-    //
-    // return maxDate;
-  // }
-
-  void updateSets(Exercise exercise) {
-    // final maxDate = getLatestDate(exercise);
-    // final latestSets = exercise.sets[maxDate];
-    // exercise.sets[currentDate] = [...latestSets!];
-  }
-
-  void addEmptySet(Exercise exercise, String date) {
-    // exercise.sets[date]!.add(Exercise.blankSet);
-    // exercise.hasChanges = true;
-    // notifyListeners();
-  }
-
-  void setExerciseName(Exercise exercise, String name) {
-    // exercise.name = name;
-    // exercise.hasChanges = true;
-    // notifyListeners();
-  }
-
-  void editExerciseSet(Exercise exercise, String date, int index, String field, int value) {
-    // exercise.sets[date]![index] = {...exercise.sets[date]![index], field: value};
-    // exercise.hasChanges = true;
-    // notifyListeners();
   }
 }

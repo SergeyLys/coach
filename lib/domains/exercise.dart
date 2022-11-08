@@ -16,9 +16,9 @@ class Exercise {
   factory Exercise.fromJson(Map<String, dynamic> json) {
     return Exercise(
       id: json['id'] as int,
-      name: json['Name'] as String,
-      group: json['Group'] as String,
-      description: json['Description'] as String,
+      name: json['name'] as String,
+      group: json['group'] as String,
+      description: json['description'] as String,
     );
   }
 }

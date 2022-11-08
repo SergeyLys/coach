@@ -174,7 +174,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     return FutureBuilder(
         future:
-            context.read<EventProvider>().fetchUsersEventsByDate(userId, _days),
+            context.read<EventProvider>().fetchUsersEventsByDate(userId, _days.first, _days.last),
         builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
           return Scaffold(
               appBar: AppBar(
