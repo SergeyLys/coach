@@ -29,20 +29,20 @@ class _HomeState extends State<Home> {
       appBar: AppBar(title: Text(DateFormat.yMMMEd().format(DateTime.now()))),
       body: Column(
         children: [
-          // Flexible(
-          //   flex: 1,
-          //   child: Container(
-          //     color: Colors.orangeAccent,
-          //     child: Center(
-          //         child: Column(
-          //             mainAxisAlignment: MainAxisAlignment.center,
-          //           children: [
-          //           Icon(Icons.food_bank_outlined, size: 70, color: Colors.white),
-          //           Text('Nutrition', style: TextStyle(fontSize: 40, color: Colors.white))
-          //         ],)
-          //     ),
-          //   ),
-          // ),
+          Flexible(
+            flex: 1,
+            child: Container(
+              color: Colors.orangeAccent,
+              child: Center(
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                    Icon(Icons.food_bank_outlined, size: 70, color: Colors.white),
+                    Text('Nutrition', style: TextStyle(fontSize: 40, color: Colors.white))
+                  ],)
+              ),
+            ),
+          ),
           Flexible(
             flex: 1,
             child: GestureDetector(

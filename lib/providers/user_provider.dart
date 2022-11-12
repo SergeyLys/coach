@@ -15,17 +15,17 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchClients(int coachId) async {
+  Future<void> fetchTrainees() async {
     try {
       final response = await NetworkService().get(
-          '$apiUrl/users/by-coach/$coachId'
+          '$apiUrl/users/by-coach/$id'
       );
 
       print(response);
 
       notifyListeners();
     } catch(e) {
-      print('fetchClients error $e');
+      print('fetchTrainees error $e');
     }
   }
 }

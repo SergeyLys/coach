@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_app/domains/gym_event_trainee.dart';
 import 'package:flutter_app/providers/event_provider.dart';
 import 'package:intl/intl.dart';
 
@@ -8,55 +9,64 @@ import 'package:provider/provider.dart';
 import './exercises_dropdown.dart';
 import './week_day_dot.dart';
 
-class CreateEventDialog extends StatefulWidget {
+class ConfigureEventDialog extends StatefulWidget {
+  final String title;
+  final TraineeEvent? event;
   final DateTime currentDate;
-  // final List<int> disabledItems;
   final Function(int id, List<int> selectedDays, bool useSmartFiller) onSubmitCallback;
-  const CreateEventDialog({Key? key, required this.onSubmitCallback, required this.currentDate}) : super(key: key);
+  const ConfigureEventDialog({Key? key,
+    required this.onSubmitCallback,
+    required this.currentDate,
+    this.event,
+    required this.title
+  }) : super(key: key);
 
   @override
-  State<CreateEventDialog> createState() => _CreateEventDialogState();
+  State<ConfigureEventDialog> createState() => _ConfigureEventDialogState();
 }
 
-class _CreateEventDialogState extends State<CreateEventDialog> {
-  late int selectedExerciseId;
+class _ConfigureEventDialogState extends State<ConfigureEventDialog> {
   late List<int> selectedDays = [];
+  late int selectedExerciseId;
   bool useSmartFiller = false;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
-    selectedDays = [weekDaysShort.indexOf(DateFormat(DateFormat.ABBR_WEEKDAY).format(widget.currentDate))];
+    if (widget.event != null) {
+      useSmartFiller = widget.event!.smartFiller;
+      selectedDays = widget.event!.repeatDays.map((day) => weekDaysShort.indexOf(day)).toList();
+    } else {
+      selectedDays = [weekDaysShort.indexOf(DateFormat(DateFormat.ABBR_WEEKDAY).format(widget.currentDate))];
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // print(DateFormat().dateSymbols.WEEKDAYS);
     final eventsProvider = context.read<EventProvider>();
     final todayEvents = eventsProvider.extractEventsByDate(widget.currentDate);
     return AlertDialog(
-      title: const Text('Enter name of the exercise you want to add'),
+      title: Text(widget.title),
       content: Container(
         child: Column(
           children: [
             ExercisesDropdown(
-                onChangeCallback: (int id) {
-                  final foundEvent = eventsProvider.getEventByExerciseId(id);
-                  final buffer = [...selectedDays];
+              selectedItem: widget.event?.exercise,
+              onChangeCallback: (int id) {
+                final foundEvent = eventsProvider.getEventByExerciseId(id);
+                final buffer = [...selectedDays];
 
-                  if (foundEvent != null) {
-                    buffer.addAll(foundEvent.repeatDays.map((el) => weekDaysShort.indexOf(el)).toList());
-                  }
+                if (foundEvent != null) {
+                  buffer.addAll(foundEvent.repeatDays.map((el) => weekDaysShort.indexOf(el)).toList());
+                }
 
-                  setState(() {
-                    selectedExerciseId = id;
-                    selectedDays = buffer.toSet().toList();
-                  });
-                },
-                // controller: exerciseDropdownController,
-                disabledItems: todayEvents.map((e) => e.exercise.id).toList(),
+                setState(() {
+                  selectedExerciseId = id;
+                  selectedDays = buffer.toSet().toList();
+                });
+              },
+              disabledItems: todayEvents.map((e) => e.exercise.id).toList(),
             ),
             const SizedBox(height: 15,),
             SwitchListTile(
@@ -98,7 +108,10 @@ class _CreateEventDialogState extends State<CreateEventDialog> {
         ),
       ),
       actions: [
-        TextButton(child: const Text('OK'), onPressed: () => widget.onSubmitCallback(selectedExerciseId, selectedDays, useSmartFiller))
+        TextButton(child: const Text('OK'), onPressed: () {
+          final id = widget.event != null ? widget.event!.id : selectedExerciseId;
+          widget.onSubmitCallback(id, selectedDays, useSmartFiller);
+        }),
       ],
     );
   }

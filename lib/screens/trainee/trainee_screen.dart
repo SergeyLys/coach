@@ -1,14 +1,18 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/assets/constants.dart';
+import 'package:flutter_app/domains/exercise.dart';
 import 'package:flutter_app/providers/event_provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
+import 'package:flutter_app/screens/trainee/components/event_card.dart';
 import 'package:flutter_app/screens/trainee/components/exercises_dropdown.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/src/provider.dart';
 import 'package:flutter_app/domains/gym_event_trainee.dart';
+import 'package:collection/collection.dart';
 
+import 'package:flutter_app/domains/sets.dart';
 import './components/create_event_dialog.dart';
 
 const int daysOffset = 15;
@@ -153,7 +157,7 @@ class _TraineeScreenState extends State<TraineeScreen> with TickerProviderStateM
           final currentIndex = result.indexWhere(
                   (element) => DateUtils.isSameDay(element, currentDay));
 
-          context.read<EventProvider>().fetchUsersEventsByDate(userId, result.first, result.last);
+          context.read<EventProvider>().fetchUsersEventsByDate(userId, days.first, days.last);
 
           setState(() {
             _days = result;
@@ -236,7 +240,6 @@ class _TraineeScreenState extends State<TraineeScreen> with TickerProviderStateM
                         controller: _tabController,
                         children: _days.map<Widget>((date) {
                           final events = provider.extractEventsByDate(date);
-                          print('$date $events');
                           return Visibility(
                             visible: !provider.isLoading,
                             replacement: const Center(
@@ -247,138 +250,29 @@ class _TraineeScreenState extends State<TraineeScreen> with TickerProviderStateM
                               child: ListView(
                                 children: [
                                   ...events.map((event) {
-                                    final currentSets = provider.extractSets(event, date);
-                                    return Stack(
-                                      key: ValueKey(event.id),
-                                      children: [
-                                        Container(
-                                          padding: EdgeInsets.only(left: 15, right: 15, bottom: 15, top: 30),
-                                          decoration: BoxDecoration(
-                                            border: Border.all(color: Colors.blueAccent),
-                                            borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                                          ),
-                                          margin: EdgeInsets.only(bottom: 15),
-                                          child: Column(
-                                            children: [
-                                              TextFormField(
-                                                decoration: const InputDecoration(
-                                                  labelText: "Exercise",
-                                                ),
-                                                initialValue: event.exercise.name,
-                                                readOnly: true,
-                                              ),
-                                              Container(
-                                                height: 50,
-                                                child: ListView.separated(
-                                                  scrollDirection: Axis.horizontal,
-                                                  itemCount: currentSets.reps.length,
-                                                  separatorBuilder: (BuildContext context, int index) =>
-                                                      const SizedBox(width: 10),
-                                                  itemBuilder: (context, index) {
-                                                    return Row(
-                                                      children: [
-                                                        Container(
-                                                          width: 40,
-                                                          child: TextFormField(
-                                                            style: TextStyle(fontSize: 14),
-                                                            initialValue: currentSets.reps[index].weight != null ? currentSets.reps[index].weight
-                                                                .toString() : '',
-                                                            decoration: const InputDecoration(
-                                                              label: Text(
-                                                                  "Weight", style: TextStyle(fontSize: 10)),
-                                                            ),
-                                                            onChanged: (value) {
-                                                              final val = value.isEmpty ? '0' : value;
-                                                              provider
-                                                                  .editSetWeight(
-                                                                  currentSets,
-                                                                  index,
-                                                                  int.parse(val)
-                                                              );
-                                                            },
-                                                          ),
-                                                        ),
-                                                        Container(
-                                                          width: 40,
-                                                          child: TextFormField(
-                                                            style: const TextStyle(fontSize: 14),
-                                                            initialValue: currentSets.reps[index].reps != null ? currentSets.reps[index].reps
-                                                                .toString() : '',
-                                                            decoration: const InputDecoration(
-                                                              label: Text(
-                                                                  "Reps", style: TextStyle(fontSize: 10)),
-                                                            ),
-                                                            onChanged: (value) {
-                                                              final val = value.isEmpty ? '0' : value;
-                                                              provider.editSetReps(
-                                                                  currentSets,
-                                                                  index,
-                                                                  int.parse(val)
-                                                              );
-                                                            },
-                                                          ),
-                                                        ),
-                                                        if (index == currentSets.reps.length - 1) Column(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                          children: [
-                                                            if (currentSets.reps.length > 1) Container(
-                                                                height: 20,
-                                                                margin: const EdgeInsets.only(top: 0),
-                                                                child: IconButton(
-                                                                    iconSize: 20,
-                                                                    onPressed: () {
-                                                                      provider
-                                                                          .removeSet(currentSets);
-                                                                    },
-                                                                    icon: const Icon(Icons.remove)
-                                                                )
-                                                            ),
-                                                            Container(
-                                                                height: 20,
-                                                                margin: const EdgeInsets.only(top: 0),
-                                                                child: IconButton(
-                                                                    iconSize: 20,
-                                                                    onPressed: () {
-                                                                      provider
-                                                                          .addSet(currentSets);
-                                                                    },
-                                                                    icon: const Icon(Icons.add)
-                                                                )
-                                                            )
+                                    final currentSet = provider.extractSets(event, date);
+                                    return EventCard(
+                                      event: event,
+                                      currentSet: currentSet,
+                                      onRemoveEvent: () {
+                                        provider.removeExercise(event, currentSet);
+                                      },
+                                      onEditEvent: () async {
+                                        final data = await openEditExerciseDialog(event, date);
 
-                                                          ],
-                                                        )
-                                                      ],
-                                                    );
-                                                  },
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Positioned(
-                                          top: 0,
-                                          right: 0,
-                                          child: IconButton(
-                                            onPressed: () {
-                                              provider.removeExercise(event, currentSets);
-                                            },
-                                            icon: const Icon(Icons.close),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          top: 0,
-                                          left: 0,
-                                          child: IconButton(
-                                            onPressed: () {
-                                              provider.saveChanges(event, currentSets, date);
-                                            },
-                                            icon: currentSets.isChanged || currentSets.isVirtual
-                                                ? const Icon(Icons.check, size: 25, color: Colors.green,)
-                                                : const Icon(Icons.check, size: 20, color: Colors.grey),
-                                          ),
-                                        ),
-                                      ],
+                                        if (data == null) return;
+
+                                        final List<String> selectedDays = data['selectedDays'].map<String>((e) => weekDaysShort[e]).toList();
+                                        final isDaysListEqual = const ListEquality().equals(selectedDays, event.repeatDays);
+                                        final isSmartFillerChanged = event.smartFiller != data['useSmartFiller'];
+
+                                        if (!isDaysListEqual || isSmartFillerChanged) {
+                                          provider.saveEventConfig(event, selectedDays, data['useSmartFiller']);
+                                        }
+                                      },
+                                      onSaveEvent: (List<RepsModel> reps) {
+                                        provider.saveSets(event, currentSet, reps, date);
+                                      }
                                     );
                                   }).toList(),
                                   Text('${date.toString()} ${DateFormat(DateFormat.ABBR_WEEKDAY).format(date)}'),
@@ -386,7 +280,7 @@ class _TraineeScreenState extends State<TraineeScreen> with TickerProviderStateM
                                       child: TextButton(
                                         child: Text("Add exercise"),
                                         onPressed: () async {
-                                          final data = await openAddExerciseDialog(events, date);
+                                          final data = await openAddExerciseDialog(date);
 
                                           if (data!['id'] == null) return;
 
@@ -409,16 +303,28 @@ class _TraineeScreenState extends State<TraineeScreen> with TickerProviderStateM
     );
   }
 
-  Future<Map<String, dynamic>?> openAddExerciseDialog(List<TraineeEvent> events, DateTime currentDate) => showDialog<Map<String, dynamic>?>(
+  Future<Map<String, dynamic>?> openEditExerciseDialog(TraineeEvent event, DateTime currentDate) => showDialog<Map<String, dynamic>?>(
       context: context,
       builder: (context) {
-        return CreateEventDialog(
-          currentDate: currentDate,
-          onSubmitCallback: submitSelectedExercise,
+        return ConfigureEventDialog(
+            title: 'Update your ${event.exercise.name} configuration',
+            event: event,
+            currentDate: currentDate,
+            onSubmitCallback: submitExercise,
         );
       });
 
-  void submitSelectedExercise(int id, List<int> selectedDays, bool useSmartFiller) {
+  Future<Map<String, dynamic>?> openAddExerciseDialog(DateTime currentDate) => showDialog<Map<String, dynamic>?>(
+      context: context,
+      builder: (context) {
+        return ConfigureEventDialog(
+          title: 'Enter name of the exercise you want to add',
+          currentDate: currentDate,
+          onSubmitCallback: submitExercise,
+        );
+      });
+
+  void submitExercise(int id, List<int> selectedDays, bool useSmartFiller) {
     Navigator.of(context).pop({'id': id, 'selectedDays': selectedDays, 'useSmartFiller': useSmartFiller});
   }
 }

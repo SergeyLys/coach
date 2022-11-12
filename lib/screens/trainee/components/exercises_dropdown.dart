@@ -10,8 +10,9 @@ class ExercisesDropdown extends StatefulWidget {
   final TextEditingController? dropdownSearchController;
   final Function(int) onChangeCallback;
   final List<int> disabledItems;
+  final Exercise? selectedItem;
 
-  const ExercisesDropdown({Key? key, this.dropdownSearchController, required this.onChangeCallback, required this.disabledItems})
+  const ExercisesDropdown({Key? key, this.dropdownSearchController, required this.onChangeCallback, required this.disabledItems, this.selectedItem})
       : super(key: key);
 
   @override
@@ -40,6 +41,7 @@ class _ExercisesDropdownState extends State<ExercisesDropdown> {
     return Consumer<ExercisesProvider>(
       builder: (context, provider, child) {
         return provider.isLoading ? Container(height: 50, child: const Center(child: CircularProgressIndicator()),) : DropdownSearch<Exercise>(
+          enabled: widget.selectedItem == null,
           mode: Mode.MENU,
           showSearchBox: true,
           items: context.watch<ExercisesProvider>().list,
@@ -48,7 +50,7 @@ class _ExercisesDropdownState extends State<ExercisesDropdown> {
           onChanged: (Exercise? item) {
             widget.onChangeCallback(item?.id ?? 0);
           },
-          selectedItem: null,
+          selectedItem: widget.selectedItem,
           popupItemBuilder: (BuildContext context, Exercise? item, bool isSelected,) {
             return Container(
               margin: EdgeInsets.symmetric(horizontal: 8),

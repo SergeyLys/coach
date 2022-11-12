@@ -2,7 +2,7 @@
     package="com.example.flutter_app">
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="Personal coach"
+        android:label="iCoach"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
