@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 
 const String apiUrlProd="http://icoach-env.eba-gnpu2np8.eu-west-2.elasticbeanstalk.com";
 const String apiUrlDev="http://localhost:3005";
-const String apiUrl = apiUrlDev;
+const String apiUrl = apiUrlProd;
 
 final Map<String, String> eventTypes = {
   'gymAppointment': 'Gym',
@@ -37,3 +37,5 @@ final List<String> weekdays = [
   'Friday',
   'Saturday',
 ];
+
+const int minutesInDay = 1440;

@@ -18,18 +18,13 @@ class ScheduleProvider extends ChangeNotifier {
 
   List<Schedule> parseEntities(List<dynamic> responseBody) => responseBody.map<Schedule>((json) => Schedule.fromJson(json)).toList();
 
-  Future<void> fetchSchedules() async {
+  Future<void> fetchSchedules(int userId) async {
     try {
       final response = await NetworkService().get(
-        '$apiUrl/schedule/by-user'
+        '$apiUrl/schedules/by-user/$userId'
       );
 
       final result = parseEntities(response);
-
-      if (result.isEmpty) {
-        await createSchedule('name', weekDaysShort);
-        return;
-      }
 
       _schedules = result;
       notifyListeners();
@@ -38,47 +33,5 @@ class ScheduleProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> createSchedule(String name, List<String> weekdays) async {
-    try {
-      final response = await NetworkService().post(
-          '$apiUrl/schedule',
-          body: {"weekdays": weekdays, "name": name});
 
-      final result = Schedule.fromJson(response);
-
-      _schedules.add(result);
-      notifyListeners();
-    } catch(e) {
-      print('createSchedule error $e');
-    }
-  }
-
-  Future<void> updateSchedule(int scheduleId, String name) async {
-    try {
-      final response = await NetworkService().patch(
-          '$apiUrl/schedule/$scheduleId',
-          body: {"name": name});
-      final result = Schedule.fromJson(response);
-      final updatedItem = _schedules.firstWhere((element) => element.id == result.id);
-
-      updatedItem.name = result.name;
-
-      notifyListeners();
-    } catch(e) {
-      print('updateSchedule error $e');
-    }
-  }
-
-  Future<void> deleteSchedule(int scheduleId) async {
-    try {
-      await NetworkService().delete(
-          '$apiUrl/schedule/$scheduleId');
-
-      _schedules.removeWhere((element) => element.id == scheduleId);
-
-      notifyListeners();
-    } catch(e) {
-      print('deleteSchedule error $e');
-    }
-  }
 }

@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/components/main_screen.dart';
-import 'package:flutter_app/domains/schedule.dart';
-import 'package:flutter_app/providers/event_provider.dart';
-import 'package:flutter_app/providers/event_provider.dart';
-import 'package:flutter_app/providers/event_provider.dart';
-import 'package:flutter_app/providers/schedule_provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
+import 'package:flutter_app/screens/coach/components/timeline_item.dart';
 import 'package:provider/src/provider.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter_app/assets/constants.dart';
-import 'package:flutter_app/domains/gym_event.dart';
-import 'package:flutter_app/domains/exercise.dart';
+
+
+import 'package:flutter_app/assets/utils.dart';
+import './components/event_card.dart';
 
 enum Menu { update, remove }
 
@@ -22,132 +18,68 @@ class CoachScreen extends StatefulWidget {
 }
 
 class _CoachScreenState extends State<CoachScreen> {
-  late TextEditingController scheduleNameController;
+  late double _scrollOffset = 0;
+  final double _paddingTop = 20;
 
   @override
   void initState() {
     super.initState();
-    scheduleNameController = TextEditingController();
 
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      Provider.of<UserProvider>(context, listen: false).fetchTrainees();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) { });
   }
+
 
   @override
   void dispose() {
     super.dispose();
-    scheduleNameController.dispose();
+  }
+
+  _onEndScroll(ScrollMetrics metrics) {
+    setState(() {
+      _scrollOffset = metrics.pixels;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: context.read<ScheduleProvider>().fetchSchedules(),
-        builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-          final isLoading = snapshot.connectionState == ConnectionState.waiting;
-          final schedules = context.watch<ScheduleProvider>().schedules;
+    final userId = context.read<UserProvider>().id;
 
-          return DefaultTabController(
-            initialIndex: weekDaysShort.indexOf(context.read<EventProvider>().today),
-            length: weekDaysShort.length,
-            child: Scaffold(
-                appBar: AppBar(
-                  title: const Center(
-                    child: Text('Your schedules'),
+    return MainScreen(
+      isLoading: false,
+      onFetchDays: (DateTime start, DateTime end) {},
+      onPostFrameCallback: (DateTime start, DateTime end) {},
+      child: (DateTime date, double topOffset) {
+        List<double> hours = getDateHours(date);
+
+        return NotificationListener<ScrollNotification>(
+          onNotification: (scrollNotification) {
+            if (scrollNotification is ScrollEndNotification) {
+              _onEndScroll(scrollNotification.metrics);
+            }
+            return false;
+          },
+          child: SingleChildScrollView(
+            child: Container(
+              key: ValueKey(date),
+              padding: EdgeInsets.only(top: _paddingTop),
+              height: 1550,
+              child: Stack(
+                children: [
+                  ...hours.map((index) => TimelineItem(position: index)),
+                  EventCard(
+                      initialTopOffset: topOffset + _paddingTop,
+                      hours: hours,
+                      scrollPosition: _scrollOffset,
+                      startDate: date.add(const Duration(hours: 3)),
+                      endDate: date.add(const Duration(hours: 4))
                   ),
-                ),
-                body: isLoading ? const Center(child: CircularProgressIndicator()) : Container(
-                    padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-                    child: Column(
-                        children: [
-                          ListView(
-                            scrollDirection: Axis.vertical,
-                            shrinkWrap: true,
-                            padding: const EdgeInsets.all(8),
-                            children: schedules.map((Schedule item) => ListTile(
-                                onTap: () => {
 
-                                },
-                                onLongPress: () {
-                                  print('long');
-                                },
-                                title: Text(item.name),
-                                trailing: PopupMenuButton<Menu>(
-                                    icon: Icon(Icons.more_vert),
-                                    onSelected: (menuItem) async {
-                                      switch(menuItem) {
-                                        case Menu.update: {
-                                          scheduleNameController.text = item.name;
-
-                                          final name = await openDialog();
-
-                                          if (name == null || name.isEmpty) return;
-
-                                          context.read<ScheduleProvider>().updateSchedule(item.id, name);
-                                        }
-                                        break;
-                                        case Menu.remove: {
-                                          context.read<ScheduleProvider>().deleteSchedule(item.id);
-                                        }
-                                        break;
-                                      }
-                                    },
-                                    itemBuilder: (BuildContext context) => [
-                                      const PopupMenuItem<Menu>(
-                                        value: Menu.update,
-                                        child: Text('Rename'),
-                                      ),
-                                      const PopupMenuItem<Menu>(
-                                        value: Menu.remove,
-                                        child: Text('Remove'),
-                                      ),
-                                    ])
-
-                            )).toList(),
-                          ),
-                          Center(
-                              child: TextButton(
-                                child: const Icon(Icons.add_rounded, size: 100),
-                                onPressed: () async {
-                                  final name = await openDialog();
-
-                                  if (name == null || name.isEmpty) return;
-
-                                  context.read<ScheduleProvider>().createSchedule(name, weekDaysShort);
-                                },
-                              )
-                          )
-                        ]
-                    )
-                )
+                ],
+              ),
             ),
-          );
-        }
+          ),
+        );
+      },
     );
-  }
-
-  Future<String?> openDialog() => showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Enter name for the schedule'),
-        content: TextField(
-          controller: scheduleNameController,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'Enter name'),
-          onSubmitted: (_) => submitName(),
-        ),
-        actions: [
-          TextButton(
-              child: const Text('OK'),
-              onPressed: submitName
-          )
-        ],
-      )
-  );
-
-  void submitName() {
-    Navigator.of(context).pop(scheduleNameController.text);
-    scheduleNameController.clear();
   }
 }

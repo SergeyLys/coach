@@ -38,12 +38,12 @@ class App extends StatelessWidget {
 
       child: MaterialApp(
         title: 'Test',
+        // home: Login(),
         home: Login(),
         routes: {
           "/login": (context) => Login(),
           "/register": (context) => Register(),
           "/home": (context) => Home(),
-          "/schedule-list": (context) => ScheduleList(),
           "/wizard-event": (context) => WizardEvent(),
         },
       ),
