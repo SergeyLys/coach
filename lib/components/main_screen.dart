@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app/providers/event_provider.dart';
+import 'package:flutter_app/providers/trainee-event_provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';

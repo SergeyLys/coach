@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_app/assets/utils.dart';
 import 'package:flutter_app/assets/constants.dart';
+import 'package:flutter_app/domains/gym_event_coach.dart';
 
 const dragPointSize = 15.0;
 const discreteStepSize = 15;
@@ -49,18 +50,18 @@ class _ManipulatingBallState extends State<ManipulatingBall> {
 
 class EventCard extends StatefulWidget {
   final double scrollPosition;
-  final DateTime startDate;
-  final DateTime endDate;
+  final CoachEvent event;
   final List<double> hours;
   final double initialTopOffset;
+  final Function(CoachEvent event) onTap;
 
   const EventCard(
       {Key? key,
       required this.hours,
       required this.scrollPosition,
-      required this.startDate,
-      required this.endDate,
+      required this.event,
       required this.initialTopOffset,
+      required this.onTap,
       })
       : super(key: key);
 
@@ -83,16 +84,15 @@ class _EventCardState extends State<EventCard> {
   @override
   void initState() {
     super.initState();
-    DateTime time = widget.startDate;
+    DateTime startDate = DateTime.parse(widget.event.startDate).toLocal();
+    DateTime endDate = DateTime.parse(widget.event.endDate).toLocal();
+    DateTime time = startDate;
     time = DateTime(time.year, time.month, time.day, 0);
-    double startMinutes =
-        getDifferenceInMinutes(time, widget.startDate).toDouble();
+    double startMinutes = getDifferenceInMinutes(time, startDate).toDouble();
     _top = getClosestNumber(startMinutes, widget.hours);
-    _duration =
-        getDifferenceInMinutes(widget.startDate, widget.endDate).toDouble();
+    _duration = getDifferenceInMinutes(startDate, endDate).toDouble();
     _bottomLimit = getClosestNumber(minutesInDay - _duration, widget.hours);
     _height = _duration;
-
   }
 
   @override
@@ -111,6 +111,9 @@ class _EventCardState extends State<EventCard> {
               child: Text('Draggable'),
             ),
           ),
+          onTap: () {
+            widget.onTap(widget.event);
+          },
           onVerticalDragDown: (DragDownDetails details) {
             setState(() {
               _touchPos = details.localPosition.dy;

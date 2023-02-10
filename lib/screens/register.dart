@@ -47,7 +47,7 @@ class _RegisterState extends State<Register> {
       Navigator.pushReplacementNamed(context, '/home');
     } catch (error) {
       setState(() {
-        _errorMessage = error.toString();
+        _errorMessage = (error as Map)['message'].toString();
       });
       print('regirester error $error');
       ScaffoldMessenger.of(context).hideCurrentSnackBar();

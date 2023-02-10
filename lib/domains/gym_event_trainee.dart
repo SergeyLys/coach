@@ -6,16 +6,27 @@ import './exercise.dart';
 class TraineeEvent extends GymEvent {
   Exercise exercise;
   List<SetsModel> sets;
-  List<String> repeatDays;
-  bool smartFiller;
 
-  TraineeEvent({id, required this.exercise, required this.sets, required this.repeatDays, required this.smartFiller}) : super(id: id);
+  TraineeEvent(
+      {id,
+      repeat,
+      repeatDays,
+      smartFiller,
+      required this.exercise,
+      required this.sets})
+      : super(
+            id: id,
+            repeat: repeat,
+            repeatDays: repeatDays,
+            smartFiller: smartFiller);
 
   factory TraineeEvent.fromJson(Map<String, dynamic> json) {
     return TraineeEvent(
       id: json['id'] as int,
       exercise: Exercise.fromJson(json['exercise']),
-      sets: json['sets'].map<SetsModel>((element) => SetsModel.fromJson(element)).toList(),
+      sets: json['sets']
+          .map<SetsModel>((element) => SetsModel.fromJson(element))
+          .toList(),
       repeatDays: List<String>.from(json['repeatDays']),
       smartFiller: json['smartFiller'],
     );

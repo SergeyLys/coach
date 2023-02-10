@@ -13,7 +13,7 @@ class NetworkService {
 
     if (statusCode < 200 || statusCode > 400) {
       if (res is Map<String, dynamic> && res.containsKey('message')) {
-        throw res['message'];
+        throw res;
       } else {
         throw "Error while fetching data";
       }

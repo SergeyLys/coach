@@ -1,6 +1,6 @@
 // import 'package:flutter/material.dart';
 // import 'package:flutter_app/domains/schedule.dart';
-// import 'package:flutter_app/providers/event_provider.dart';
+// import 'package:flutter_app/providers/trainee-event_provider.dart';
 // import 'package:flutter_app/providers/schedule_provider.dart';
 // import 'package:flutter_app/screens/trainee/trainee_screen.dart';
 // import 'package:provider/src/provider.dart';

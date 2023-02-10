@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/assets/constants.dart';
 import 'package:flutter_app/components/main_screen.dart';
-import 'package:flutter_app/providers/event_provider.dart';
+import 'package:flutter_app/providers/trainee-event_provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
 import 'package:flutter_app/screens/trainee/components/event_card.dart';
 import 'package:intl/intl.dart';
@@ -26,13 +26,14 @@ class _TraineeScreenState extends State<TraineeScreen> with TickerProviderStateM
     final userId = context.read<UserProvider>().id;
 
     return MainScreen(
-        isLoading: context.watch<EventProvider>().isLoading,
-        onFetchDays: (start, end) => context.read<EventProvider>().fetchUsersEventsByDate(userId, start, end),
-        onPostFrameCallback: (start, end) => Provider.of<EventProvider>(context, listen: false).fetchUsersEventsByDate(userId, start, end),
-        child: (date) {
-          return Consumer<EventProvider>(
+        isLoading: context.watch<TraineeEventProvider>().isLoading,
+        onFetchDays: (DateTime start, DateTime end) => context.read<TraineeEventProvider>().fetchUsersEventsByDate(userId, start, end),
+        onPostFrameCallback: (DateTime start, DateTime end) => Provider.of<TraineeEventProvider>(context, listen: false).fetchUsersEventsByDate(userId, start, end),
+        child: (DateTime date, double offset) {
+          return Consumer<TraineeEventProvider>(
               builder: (context, provider, child) {
                 final events = provider.extractEventsByDate(date);
+                print('date $date events $events');
                 return Visibility(
                     visible: !provider.isLoading,
                     replacement: const Center(

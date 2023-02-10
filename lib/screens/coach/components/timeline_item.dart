@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 
 class TimelineItem extends StatefulWidget {
   final double position;
-  const TimelineItem({Key? key, required this.position}) : super(key: key);
+  final Function(double position) onLongTap;
+  const TimelineItem({Key? key, required this.position, required this.onLongTap}) : super(key: key);
 
   @override
   State<TimelineItem> createState() => _TimelineItemState();
@@ -20,75 +21,79 @@ class _TimelineItemState extends State<TimelineItem> {
 
     return Positioned(
       top: widget.position,
-      child: Stack(
+      child: isMinutes
+          ? Container(
+          padding: EdgeInsets.only(left: 25),
+          child: Stack(
+            children: [
+              GestureDetector(
+                onLongPressStart: (det) {
+                  widget.onLongTap(det.globalPosition.dy);
+                },
+                child: Container(
+                  padding: EdgeInsets.only(left: 45),
+                  child: SizedBox(
+                    height: 15,
+                    width: MediaQuery.of(context)
+                        .size
+                        .width,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0)
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 20,
+                top: -7,
+                width:
+                MediaQuery.of(context).size.width,
+                child: Divider(
+                    color: Colors.black
+                        .withOpacity(0.3)),
+              ),
+              Text(
+                '$minutes',
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.black
+                        .withOpacity(0.3)),
+              ),
+            ],
+          ))
+          : Stack(
         children: [
-          Container(
-            padding: EdgeInsets.only(left: 45),
-            child: SizedBox(
-              height: 15,
+          GestureDetector(
+            onLongPressStart: (det) {
+              widget.onLongTap(det.globalPosition.dy);
+            },
+            child: Container(
+              padding: EdgeInsets.only(left: 45),
+              child: SizedBox(
+                height: 15,
+                width:
+                MediaQuery.of(context).size.width,
+              ),
+              decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0)
+              ),
             ),
           ),
-
           Positioned(
-              child: isMinutes
-                  ? Container(
-                  padding: EdgeInsets.only(left: 25),
-                  child: Stack(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.only(left: 45),
-                        child: SizedBox(
-                          height: 15,
-                          width: MediaQuery.of(context)
-                              .size
-                              .width,
-                        ),
-                      ),
-                      Positioned(
-                        left: 20,
-                        top: -7,
-                        width:
-                        MediaQuery.of(context).size.width,
-                        child: Divider(
-                            color: Colors.black
-                                .withOpacity(0.3)),
-                      ),
-                      Text(
-                        '$minutes',
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.black
-                                .withOpacity(0.3)),
-                      ),
-                    ],
-                  ))
-                  : Stack(
-                children: [
-                  Container(
-                    padding: EdgeInsets.only(left: 45),
-                    child: SizedBox(
-                      height: 15,
-                      width:
-                      MediaQuery.of(context).size.width,
-                    ),
-                  ),
-                  Positioned(
-                    left: 45,
-                    top: -7,
-                    width:
-                    MediaQuery.of(context).size.width,
-                    child: Divider(color: Colors.black),
-                  ),
-                  Text(
-                    (hours < 10
-                        ? '0' + hours.toString()
-                        : hours.toString()) +
-                        ':00',
-                  ),
-                ],
-              )),
+            left: 45,
+            top: -7,
+            width:
+            MediaQuery.of(context).size.width,
+            child: Divider(color: Colors.black),
+          ),
+          Text(
+            (hours < 10
+                ? '0' + hours.toString()
+                : hours.toString()) +
+                ':00',
+          ),
         ],
-      ),
+      )
     );
   }
 }

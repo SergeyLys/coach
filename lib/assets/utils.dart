@@ -40,12 +40,8 @@ int getDifferenceInMinutes(DateTime start, DateTime end) {
   return diff.inMinutes;
 }
 
-List<double> getDateHours(DateTime date) {
-  DateTime dt2 = date;
-  DateTime dt1 = date.add(const Duration(hours: 24));
-  Duration diff = dt1.difference(dt2);
-
-  int hoursInMinutes = diff.inMinutes ?? minutesInDay;
+List<double> getDateHours() {
+  int hoursInMinutes = minutesInDay;
   int rowsCount = hoursInMinutes ~/ 15;
 
   return List.generate(rowsCount+1, (index) => index * 15);

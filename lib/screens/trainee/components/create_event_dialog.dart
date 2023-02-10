@@ -1,13 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/domains/gym_event_trainee.dart';
-import 'package:flutter_app/providers/event_provider.dart';
+import 'package:flutter_app/providers/trainee-event_provider.dart';
 import 'package:intl/intl.dart';
 
 import 'package:flutter_app/assets/constants.dart';
 import 'package:provider/provider.dart';
 import './exercises_dropdown.dart';
-import './week_day_dot.dart';
+import '../../../components/week_day_dot.dart';
 
 class ConfigureEventDialog extends StatefulWidget {
   final String title;
@@ -44,7 +44,7 @@ class _ConfigureEventDialogState extends State<ConfigureEventDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final eventsProvider = context.read<EventProvider>();
+    final eventsProvider = context.read<TraineeEventProvider>();
     final todayEvents = eventsProvider.extractEventsByDate(widget.currentDate);
     return AlertDialog(
       title: Text(widget.title),
