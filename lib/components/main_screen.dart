@@ -1,110 +1,32 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app/assets/constants.dart';
-import 'package:flutter_app/domains/exercise.dart';
-import 'package:flutter_app/providers/event_provider.dart';
-import 'package:flutter_app/providers/exercises_provider.dart';
+import 'package:flutter_app/providers/trainee-event_provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:provider/src/provider.dart';
-
-List<dynamic> getDaysForPeriod(int month, int year, int? from, DateTime? to) {
-  final List<dynamic> days = [];
-  late int day = 1;
-
-  if (from != null) {
-    day += from - 1;
-  }
-
-  final DateTime startDate = DateTime(year, month, day);
-
-  var currentDate = startDate;
-
-  while (currentDate.month == month) {
-    days.add(currentDate);
-
-    if (to != null && currentDate.isAtSameMomentAs(to)) {
-      break;
-    }
-
-    currentDate = DateTime(year, month, currentDate.day + 1);
-  }
-
-  return days;
-}
-
-Map<String, dynamic> getToday() {
-  final now = DateTime.now();
-  final currentMonth = now.month;
-  final currentYear = now.year;
-  final date = DateTime(now.year, now.month, now.day);
-
-  return {'month': currentMonth, 'year': currentYear, 'date': date};
-}
-
-class ExercisesDropdown extends StatefulWidget {
-  final Function onChangeCallback;
-
-  const ExercisesDropdown({Key? key, required this.onChangeCallback})
-      : super(key: key);
-
-  @override
-  State<ExercisesDropdown> createState() => _ExercisesDropdownState();
-}
-
-class _ExercisesDropdownState extends State<ExercisesDropdown> {
-  // Exercise dropdownValue;
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: context.read<ExercisesProvider>().fetchExercises(),
-        builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-          final isLoading = snapshot.connectionState == ConnectionState.waiting;
-          return isLoading ? const Center(child: CircularProgressIndicator()) : DropdownButton<Exercise>(
-            value: context.watch<ExercisesProvider>().list.first,
-            icon: const Icon(Icons.arrow_downward),
-            elevation: 16,
-            style: const TextStyle(color: Colors.black),
-            underline: Container(
-              height: 2,
-              color: Colors.blueAccent,
-            ),
-            onChanged: (Exercise? value) {
-              // This is called when the user selects an item.
-              // setState(() {
-              //   dropdownValue = value!;
-              // });
-
-              if (value != null) {
-                widget.onChangeCallback(value.id);
-              }
-            },
-            items: context.watch<ExercisesProvider>().list.map((Exercise exercise) {
-              return DropdownMenuItem<Exercise>(
-                value: exercise,
-                child: Text(exercise.name),
-              );
-            }).toList(),
-          );
-        });
-  }
-}
+import 'package:flutter_app/assets/utils.dart';
 
 class MainScreen extends StatefulWidget {
+  final bool isLoading;
+  final void Function(DateTime start, DateTime end) onFetchDays;
+  final void Function(DateTime start, DateTime end) onPostFrameCallback;
   final Function child;
 
-  const MainScreen({Key? key, required this.child}) : super(key: key);
+  const MainScreen(
+      {Key? key, required this.isLoading, required this.onFetchDays, required this.child, required this.onPostFrameCallback})
+      : super(key: key);
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
+  final int daysOffset = 15;
   late TabController _tabController;
   late List<dynamic> _days = [];
-  late int _currentMonth;
-  late int _currentYear;
+  GlobalKey containerKey = GlobalKey();
+  late double _topOffset = 0;
 
   @override
   void initState() {
@@ -112,15 +34,65 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     final today = getToday();
     final days = getDaysForPeriod(today['month'], today['year'], null, null);
+    late int nextYear;
+    late int nextMonth;
+    final buffer = [];
 
-    _days = days;
-    _currentMonth = today['month'];
-    _currentYear = today['year'];
+    final int daysInMonth = DateUtils.getDaysInMonth(
+        today['year'], today['month']);
+    final bool shouldAddNextMonth = today['date'].day >=
+        daysInMonth - daysOffset;
+    final bool shouldAddPrevMonth = today['date'].day <= daysOffset;
+
+    if (shouldAddNextMonth) {
+      nextYear = today['year'];
+      if (today['month'] == 12) {
+        nextYear += 1;
+        nextMonth = 1;
+      } else {
+        nextMonth = today['month'] + 1;
+      }
+      final nextDays = getDaysForPeriod(nextMonth, nextYear, null, null);
+
+      buffer.addAll(nextDays);
+    }
+
+    if (shouldAddPrevMonth) {
+      nextYear = today['year'];
+      if (today['month'] == 1) {
+        nextYear -= 1;
+        nextMonth = 12;
+      } else {
+        nextMonth = today['month'] - 1;
+      }
+      final nextDays = getDaysForPeriod(nextMonth, nextYear, null, null);
+
+      buffer.addAll(nextDays);
+    }
+
+    final result = [...days, ...buffer];
+
+    result.sort((date1, date2) => date1.compareTo(date2));
+
+    _days = result;
     _tabController = TabController(
-        length: days.length,
+        length: _days.length,
         vsync: this,
         initialIndex: _days
-            .indexWhere((element) => element.isAtSameMomentAs(today['date'])));
+            .indexWhere((element) =>
+            DateUtils.isSameDay(element, today['date'])));
+    _tabController.addListener(handleTabChange);
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      RenderObject? box = containerKey.currentContext?.findRenderObject();
+      Offset position = (box as RenderBox).localToGlobal(Offset.zero);
+      double y = position.dy;
+
+      setState(() {
+        _topOffset = y;
+      });
+      widget.onPostFrameCallback(_days.first, _days.last);
+    });
   }
 
   @override
@@ -129,150 +101,130 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  void handleTabChange() {
+    if (!_tabController.indexIsChanging) {
+      final int currentMonth = _days[_tabController.index].month;
+      final int currentYear = _days[_tabController.index].year;
+      final generateNextMonth = _tabController.index >=
+          _days.length - daysOffset;
+      final generatePrevMonth = _tabController.index <= daysOffset;
+      late int month;
+      late int year;
+
+      if (generateNextMonth) {
+        month = currentMonth == 12 ? 1 : currentMonth + 1;
+        year = currentMonth == 12 ? currentYear + 1 : currentYear;
+      }
+
+      if (generatePrevMonth) {
+        month = currentMonth == 1 ? 12 : currentMonth - 1;
+        year = currentMonth == 1 ? currentYear - 1 : currentYear;
+      }
+
+      if (generateNextMonth || generatePrevMonth) {
+        final days = getDaysForPeriod(month, year, null, null);
+        final currentDay = _days[_tabController.index];
+        final result = [..._days, ...days];
+
+        result.sort((date1, date2) => date1.compareTo(date2));
+
+        final currentIndex = result.indexWhere(
+                (element) => DateUtils.isSameDay(element, currentDay));
+
+        widget.onFetchDays(days.first, days.last);
+
+        setState(() {
+          _days = result;
+          _tabController = TabController(
+            length: result.length,
+            vsync: this,
+            initialIndex: currentIndex,
+          );
+        });
+
+        _tabController.addListener(handleTabChange);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final displayDate = DateFormat.yMMMEd().format(DateTime.now());
 
-    _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
-        late int month;
-        late int year;
-
-        final generateNextMonth = _tabController.index >= _days.length - 5;
-        final generatePrevMonth = _tabController.index <= 5;
-
-        if (generateNextMonth) {
-          month = _currentMonth == 12 ? 1 : _currentMonth + 1;
-          year = _currentMonth == 12 ? _currentYear + 1 : _currentYear;
-        }
-
-        if (generatePrevMonth) {
-          month = _currentMonth == 1 ? 12 : _currentMonth - 1;
-          year = _currentMonth == 1 ? _currentYear - 1 : _currentYear;
-        }
-
-        if (generateNextMonth || generatePrevMonth) {
-          final days = getDaysForPeriod(month, year, null, null);
-          final currentDay = _days[_tabController.index];
-
-          setState(() {
-            _days = [..._days, ...days];
-            _currentMonth = month;
-            _currentYear = year;
-            _tabController = TabController(
-                length: _days.length,
-                vsync: this,
-                initialIndex: _days.indexWhere(
-                    (element) => element.isAtSameMomentAs(currentDay)));
-          });
-        }
-      }
-    });
-    final userId = context.read<UserProvider>().id;
-
-    // print(_days);
-
-    return FutureBuilder(
-        future:
-            context.read<EventProvider>().fetchUsersEventsByDate(userId, _days.first, _days.last),
-        builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-          return Scaffold(
-              appBar: AppBar(
-                actions: <Widget>[
-                  PopupMenuButton(
-                      onSelected: (item) {
-                        print(item);
-                      },
-                      itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                            const PopupMenuItem(
-                              value: 0,
-                              child: Text('Item 1'),
-                            ),
-                            const PopupMenuItem(
-                              value: 1,
-                              child: Text('Item 2'),
-                            ),
-                            const PopupMenuItem(
-                              value: 2,
-                              child: Text('Item 3'),
-                            ),
-                            const PopupMenuItem(
-                              value: 3,
-                              child: Text('Item 4'),
-                            ),
-                          ]),
-                ],
-                title: Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      final today = getToday();
-
-                      _tabController.animateTo(_days.indexWhere((element) =>
-                          element.isAtSameMomentAs(today['date'])));
-                    },
-                    child: Text('$displayDate'),
+    return Scaffold(
+        appBar: AppBar(
+          actions: <Widget>[
+            PopupMenuButton(
+                onSelected: (item) {
+                  print(item);
+                },
+                itemBuilder: (BuildContext context) =>
+                <PopupMenuEntry>[
+                  const PopupMenuItem(
+                    value: 0,
+                    child: Text('Item 1'),
                   ),
-                ),
-                bottom: TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  labelPadding:
-                      EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 10),
-                  tabs:
-                      _days.map<Widget>((day) => Text(day.toString())).toList(),
-                ),
-              ),
-              body: Container(
-                padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-                child: Container(
-                  child: Center(
-                      child: TabBarView(
-                    controller: _tabController,
-                    children: _days.map<Widget>((date) {
-                      return Container(
-                        margin: EdgeInsets.only(bottom: 15, top: 15),
-                        child: ListView(
-                          children: [
-                            // ..._buildExercises(event),
-                            Text(date.toString()),
-                            Center(
-                                child: TextButton(
-                              child: Text("Add exercise"),
-                              onPressed: () async {
-                                final name = await openDialog();
+                  const PopupMenuItem(
+                    value: 1,
+                    child: Text('Item 2'),
+                  ),
+                  const PopupMenuItem(
+                    value: 2,
+                    child: Text('Item 3'),
+                  ),
+                  const PopupMenuItem(
+                    value: 3,
+                    child: Text('Item 4'),
+                  ),
+                ]),
+          ],
+          title: Center(
+            child: GestureDetector(
+              onTap: () {
+                final today = getToday();
 
-                                if (name == null || name.isEmpty) return;
-                              },
-                            ))
-                          ],
-                        ),
-                      );
-                      ;
-                    }).toList(),
-                  )),
-                ),
-              )
-              // body: widget.child(_tabController, _days.length),
-              );
-        });
-  }
-
-  Future<String?> openDialog() => showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-            title: const Text('Enter name for the schedule'),
-            content: ExercisesDropdown(
-              onChangeCallback: (id) {
-                print(id);
+                _tabController.animateTo(_days.indexWhere((element) =>
+                    DateUtils.isSameDay(element, today['date'])));
               },
+              child: Text('$displayDate'),
             ),
-            actions: [
-              TextButton(child: const Text('OK'), onPressed: submitName)
-            ],
-          ));
-
-  void submitName() {
-    // Navigator.of(context).pop(scheduleNameController.text);
-    // scheduleNameController.clear();
+          ),
+          bottom: widget.isLoading ? PreferredSize(
+              child: Container(
+                height: 0.0,
+              ),
+              preferredSize: const Size.fromHeight(0.0)
+          ) : TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            labelPadding:
+            const EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 10),
+            tabs:
+            _days.map<Widget>((day) =>
+                Padding(padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(DateFormat('dd-MM-yyyy').format(day)),)
+            ).toList(),
+          ),
+        ),
+        body: Container(
+            padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+            child: Container(
+                key: containerKey,
+                child: Center(
+                    child: TabBarView(
+                        controller: _tabController,
+                        children: _days.map<Widget>((date) => widget.child(date, _topOffset)).toList()
+                    )
+                )
+            )
+        )
+    );
   }
 }
+
+
+
+
+
+
+

@@ -37,3 +37,5 @@ final List<String> weekdays = [
   'Friday',
   'Saturday',
 ];
+
+const int minutesInDay = 1440;

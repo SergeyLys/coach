@@ -7,7 +7,7 @@ import 'package:flutter_app/services/network_service.dart';
 import 'package:flutter_app/domains/gym_event_trainee.dart';
 import 'package:collection/collection.dart';
 
-class EventProvider extends ChangeNotifier {
+class TraineeEventProvider extends ChangeNotifier {
   final List<TraineeEvent> _events = [];
   List<TraineeEvent> get events => _events;
 
@@ -27,7 +27,7 @@ class EventProvider extends ChangeNotifier {
       notifyListeners();
 
       final response = await NetworkService().post(
-          '$apiUrl/events/update',
+          '$apiUrl/trainee-events/update',
           body: {
             'id': event.id,
             'repeatDays': selectedDays,
@@ -51,7 +51,7 @@ class EventProvider extends ChangeNotifier {
       notifyListeners();
 
       final response = await NetworkService().post(
-          '$apiUrl/events',
+          '$apiUrl/trainee-events',
           body: {
             'exerciseID': exerciseId,
             'date': date.toString(),
@@ -97,7 +97,7 @@ class EventProvider extends ChangeNotifier {
       notifyListeners();
 
       final response = await NetworkService().get(
-          '$apiUrl/events/by-user/$userId?from=${start.toString()}&to=${end.toString()}'
+          '$apiUrl/trainee-events/by-user/$userId?from=${start.toString()}&to=${end.toString()}'
       );
 
       final List<TraineeEvent> result = response.map<TraineeEvent>((json) => TraineeEvent.fromJson(json)).toList();
@@ -185,12 +185,12 @@ class EventProvider extends ChangeNotifier {
 
   Future<void> removeExercise(TraineeEvent event, SetsModel sets) async {
     try {
-      // isLoading = true;
-      // notifyListeners();
+      isLoading = true;
+      notifyListeners();
 
       if (sets.isVirtual) {
         sets.isDeactivated = true;
-        // isLoading = false;
+        isLoading = false;
         notifyListeners();
         return;
       }
@@ -205,7 +205,7 @@ class EventProvider extends ChangeNotifier {
 
       event.sets.removeWhere((element) => element.id == sets.id);
 
-      // isLoading = false;
+      isLoading = false;
       notifyListeners();
     } catch(e) {
       print('removeExercise error $e');
@@ -237,9 +237,11 @@ class EventProvider extends ChangeNotifier {
         final isAfterOrSame = isAfterDate || isSameDate;
 
         if (setsForCurrentDate.isNotEmpty) {
+          print('date 1 $date setsForCurrentDate 1 $setsForCurrentDate');
           return (isDayMatched && isAfterOrSame) && setsForCurrentDate.where((element) => element.isDeactivated).isEmpty;
         }
 
+        print('date 2 $date element ${element.smartFiller}');
         return (isDayMatched && isAfterOrSame);
       }
 

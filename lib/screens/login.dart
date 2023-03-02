@@ -43,7 +43,7 @@ class _LoginState extends State<Login> {
       Navigator.pushReplacementNamed(context, '/home');
     } catch (error) {
       setState(() {
-        _errorMessage = error.toString();
+        _errorMessage = (error as Map)['message'].toString();
       });
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
     }
