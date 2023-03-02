@@ -38,6 +38,10 @@ class TraineeEventProvider extends ChangeNotifier {
       event.smartFiller = response[0]['smartFiller'];
       event.repeatDays = List<String>.from(response[0]['repeatDays']);
 
+      if (!event.smartFiller) {
+        event.sets.removeWhere((element) => element.isVirtual);
+      }
+
       isLoading = false;
       notifyListeners();
     } catch(e) {
@@ -195,7 +199,7 @@ class TraineeEventProvider extends ChangeNotifier {
         return;
       }
 
-      await NetworkService().post(
+      final removed = await NetworkService().post(
           '$apiUrl/sets/destroy',
           body: {
             'eventID': event.id,
@@ -203,7 +207,11 @@ class TraineeEventProvider extends ChangeNotifier {
           }
       );
 
-      event.sets.removeWhere((element) => element.id == sets.id);
+      event.sets.removeWhere((element) => element.id == removed['sets']);
+      
+      if (removed['event'] != null) {
+        events.removeWhere((element) => element.id == removed['event']);
+      }
 
       isLoading = false;
       notifyListeners();
@@ -237,11 +245,9 @@ class TraineeEventProvider extends ChangeNotifier {
         final isAfterOrSame = isAfterDate || isSameDate;
 
         if (setsForCurrentDate.isNotEmpty) {
-          print('date 1 $date setsForCurrentDate 1 $setsForCurrentDate');
           return (isDayMatched && isAfterOrSame) && setsForCurrentDate.where((element) => element.isDeactivated).isEmpty;
         }
 
-        print('date 2 $date element ${element.smartFiller}');
         return (isDayMatched && isAfterOrSame);
       }
 

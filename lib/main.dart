@@ -3,6 +3,7 @@ import 'package:flutter_app/providers/trainee-event_provider.dart';
 import 'package:flutter_app/providers/coach-event_provider.dart';
 import 'package:flutter_app/providers/exercises_provider.dart';
 import 'package:flutter_app/providers/schedule_provider.dart';
+import 'package:flutter_app/screens/exercise-wizard/wizard-screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
 import 'package:flutter_app/screens/login.dart';
@@ -45,6 +46,7 @@ class App extends StatelessWidget {
           "/login": (context) => Login(),
           "/register": (context) => Register(),
           "/home": (context) => Home(),
+          "/exercise-wizard": (context) => ExerciseWizard(),
         },
       ),
     );

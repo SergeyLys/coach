@@ -33,7 +33,6 @@ class _TraineeScreenState extends State<TraineeScreen> with TickerProviderStateM
           return Consumer<TraineeEventProvider>(
               builder: (context, provider, child) {
                 final events = provider.extractEventsByDate(date);
-                print('date $date events $events');
                 return Visibility(
                     visible: !provider.isLoading,
                     replacement: const Center(
