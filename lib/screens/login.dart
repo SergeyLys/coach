@@ -40,7 +40,15 @@ class _LoginState extends State<Login> {
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-      Navigator.pushReplacementNamed(context, '/home');
+      final currentUserRole = context.read<UserProvider>().role;
+
+      if (currentUserRole == 'TRAINEE') {
+        Navigator.pushReplacementNamed(context, '/trainee-screen');
+      }
+
+      if (currentUserRole == 'COACH') {
+        Navigator.pushReplacementNamed(context, '/coach-screen');
+      }
     } catch (error) {
       setState(() {
         _errorMessage = (error as Map)['message'].toString();

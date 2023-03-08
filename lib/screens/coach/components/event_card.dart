@@ -54,6 +54,7 @@ class EventCard extends StatefulWidget {
   final List<double> hours;
   final double initialTopOffset;
   final Function(CoachEvent event) onTap;
+  final Function(CoachEvent event) onLongPress;
 
   const EventCard(
       {Key? key,
@@ -62,6 +63,7 @@ class EventCard extends StatefulWidget {
       required this.event,
       required this.initialTopOffset,
       required this.onTap,
+      required this.onLongPress,
       })
       : super(key: key);
 
@@ -111,6 +113,9 @@ class _EventCardState extends State<EventCard> {
               child: Text('Draggable'),
             ),
           ),
+          onLongPress: () {
+            widget.onLongPress(widget.event);
+          },
           onTap: () {
             widget.onTap(widget.event);
           },

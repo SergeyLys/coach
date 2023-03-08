@@ -22,7 +22,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
-  final int daysOffset = 15;
+  final int daysOffset = 7;
   late TabController _tabController;
   late List<dynamic> _days = [];
   GlobalKey containerKey = GlobalKey();
