@@ -44,7 +44,15 @@ class _RegisterState extends State<Register> {
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-      Navigator.pushReplacementNamed(context, '/home');
+      final currentUserRole = context.read<UserProvider>().role;
+
+      if (currentUserRole == 'TRAINEE') {
+        Navigator.pushReplacementNamed(context, '/trainee-screen');
+      }
+
+      if (currentUserRole == 'COACH') {
+        Navigator.pushReplacementNamed(context, '/coach-screen');
+      }
     } catch (error) {
       setState(() {
         _errorMessage = (error as Map)['message'].toString();
@@ -101,7 +109,7 @@ class _RegisterState extends State<Register> {
                     value: userRoleValue,
                     icon: const Icon(Icons.arrow_downward),
                     elevation: 16,
-                    style: const TextStyle(color: Colors.black),
+                    // style: const TextStyle(color: Colors.black),
                     decoration: InputDecoration(labelText: "Role"),
                     onChanged: (String? value) {
                       setState(() {

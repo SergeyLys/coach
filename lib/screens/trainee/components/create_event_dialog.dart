@@ -73,7 +73,7 @@ class _ConfigureEventDialogState extends State<ConfigureEventDialog> {
             text: TextSpan(
               children: <TextSpan>[
                 TextSpan(
-                  style: TextStyle(color: Colors.black, fontSize: 14.0),
+                  style: TextStyle(fontSize: 14.0),
                   text: "Haven't found anything? "
                 ),
                 TextSpan(
@@ -81,6 +81,7 @@ class _ConfigureEventDialogState extends State<ConfigureEventDialog> {
                     style: TextStyle(color: Colors.blue),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
+                        Navigator.of(context).pop();
                         Navigator.pushNamed(context, '/exercise-wizard');
                 }),
               ],

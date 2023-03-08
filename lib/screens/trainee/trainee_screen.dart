@@ -14,7 +14,8 @@ import 'package:flutter_app/domains/sets.dart';
 import './components/create_event_dialog.dart';
 
 class TraineeScreen extends StatefulWidget {
-  const TraineeScreen({Key? key}) : super(key: key);
+  final int? userId;
+  const TraineeScreen({Key? key, this.userId}) : super(key: key);
 
   @override
   State<TraineeScreen> createState() => _TraineeScreenState();
@@ -23,7 +24,7 @@ class TraineeScreen extends StatefulWidget {
 class _TraineeScreenState extends State<TraineeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
-    final userId = context.read<UserProvider>().id;
+    final userId = widget.userId ?? context.read<UserProvider>().id;
 
     return MainScreen(
         isLoading: context.watch<TraineeEventProvider>().isLoading,

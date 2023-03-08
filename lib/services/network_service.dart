@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'dart:developer';
+
+void printWrapped(String text) {
+  final pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
+  pattern.allMatches(text).forEach((match) => print(match.group(0)));
+}
 
 class NetworkService {
   static String _token = '';
@@ -9,7 +15,7 @@ class NetworkService {
     final res = jsonDecode(response.body);
     final int statusCode = response.statusCode;
 
-    print('NetworkService $method $url $statusCode ${response.body}');
+    printWrapped('NetworkService $method $url $statusCode ${response.body}');
 
     if (statusCode < 200 || statusCode > 400) {
       if (res is Map<String, dynamic> && res.containsKey('message')) {

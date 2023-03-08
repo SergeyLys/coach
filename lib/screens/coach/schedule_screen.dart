@@ -45,9 +45,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     openDialog(widget.date, TimeOfDay(hour: selected, minute: 0), null);
   }
 
-  _handleEventTap(CoachEvent event) {
+  _handleEventLongPress(CoachEvent event) {
     DateTime startDate = DateTime.parse(event.startDate).toLocal();
     openDialog(widget.date, TimeOfDay(hour: startDate.hour, minute: startDate.minute), event);
+  }
+
+  _handleEventTap(CoachEvent event) {
+    print(event.assignee);
   }
 
   @override
@@ -74,7 +78,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       hours: _hours,
                       scrollPosition: _scrollOffset,
                       event: item,
-                      onTap: _handleEventTap
+                      onTap: _handleEventTap,
+                      onLongPress: _handleEventLongPress
                   ),
               )
             ],
