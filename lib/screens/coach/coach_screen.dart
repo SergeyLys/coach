@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_app/components/main_screen.dart';
+import 'package:flutter_app/common_widgets/main_screen.dart';
 import 'package:flutter_app/providers/coach-event_provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
 import 'package:flutter_app/screens/coach/schedule_screen.dart';
@@ -12,6 +12,8 @@ import 'package:provider/src/provider.dart';
 enum Menu { update, remove }
 
 class CoachScreen extends StatefulWidget {
+  static const routeName = '/coach-screen';
+
   const CoachScreen({Key? key}) : super(key: key);
 
   @override

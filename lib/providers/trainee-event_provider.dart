@@ -49,7 +49,7 @@ class TraineeEventProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> createEventFromCatalog(int exerciseId, DateTime date, List<String> selectedDays, bool useSmartFiller) async {
+  Future<void> createEventFromCatalog(int exerciseId, DateTime date, List<String> selectedDays, bool useSmartFiller, int assigneeId) async {
     try {
       isLoading = true;
       notifyListeners();
@@ -60,7 +60,8 @@ class TraineeEventProvider extends ChangeNotifier {
             'exerciseID': exerciseId,
             'date': date.toString(),
             'repeatDays': selectedDays,
-            'smartFiller': useSmartFiller
+            'smartFiller': useSmartFiller,
+            'assigneeId': assigneeId
           }
       );
 

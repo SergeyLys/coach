@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:provider/src/provider.dart';
 import 'package:flutter_app/assets/utils.dart';
 
+import '../screens/user-profile/user-profile.dart';
+
 class MainScreen extends StatefulWidget {
   final bool isLoading;
   final void Function(DateTime start, DateTime end) onFetchDays;
@@ -27,6 +29,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   late List<dynamic> _days = [];
   GlobalKey containerKey = GlobalKey();
   late double _topOffset = 0;
+  int _selectedPageIndex = 0;
+
 
   @override
   void initState() {
@@ -147,6 +151,35 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     }
   }
 
+  void handlePageChange(int index) {
+    setState(() {
+      _selectedPageIndex = index;
+    });
+  }
+
+  Widget getBody(int selectedPage) {
+    switch (selectedPage) {
+      case 0: {
+        return Container(
+            padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+            child: Container(
+                key: containerKey,
+                child: Center(
+                    child: TabBarView(
+                        controller: _tabController,
+                        children: _days.map<Widget>((date) => widget.child(date, _topOffset)).toList()
+                    )
+                )
+            )
+        );
+      }
+      case 1: {
+        return const UserProfile();
+      }
+      default: return const SizedBox.shrink();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final displayDate = DateFormat.yMMMEd().format(DateTime.now());
@@ -179,7 +212,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 ]),
           ],
           title: Center(
-            child: GestureDetector(
+            child: _selectedPageIndex == 0 ? GestureDetector(
               onTap: () {
                 final today = getToday();
 
@@ -187,9 +220,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                     DateUtils.isSameDay(element, today['date'])));
               },
               child: Text('$displayDate'),
-            ),
+            ) : Text('Profile'),
           ),
-          bottom: widget.isLoading ? PreferredSize(
+          bottom: widget.isLoading || _selectedPageIndex != 0 ? PreferredSize(
               child: Container(
                 height: 0.0,
               ),
@@ -206,18 +239,22 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             ).toList(),
           ),
         ),
-        body: Container(
-            padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-            child: Container(
-                key: containerKey,
-                child: Center(
-                    child: TabBarView(
-                        controller: _tabController,
-                        children: _days.map<Widget>((date) => widget.child(date, _topOffset)).toList()
-                    )
-                )
-            )
-        )
+        body: getBody(_selectedPageIndex),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.fitness_center),
+              label: 'Sports',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_circle_rounded),
+              label: 'Account',
+            ),
+          ],
+          currentIndex: _selectedPageIndex,
+          selectedItemColor: Colors.amber[800],
+          onTap: handlePageChange,
+        ),
     );
   }
 }

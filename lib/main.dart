@@ -10,8 +10,8 @@ import 'package:flutter_app/theme/theme_constants.dart';
 import 'package:flutter_app/theme/theme_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
-import 'package:flutter_app/screens/login.dart';
-import 'package:flutter_app/screens/register.dart';
+import 'package:flutter_app/screens/authentication/login.dart';
+import 'package:flutter_app/screens/authentication/register.dart';
 
 ThemeManager _themeManager = ThemeManager();
 
@@ -52,9 +52,9 @@ class App extends StatelessWidget {
         routes: {
           "/login": (context) => Login(),
           "/register": (context) => Register(),
-          "/coach-screen": (context) => CoachScreen(),
-          "/trainee-screen": (context) => TraineeScreen(),
-          "/exercise-wizard": (context) => ExerciseWizard(),
+          CoachScreen.routeName: (context) => CoachScreen(),
+          TraineeScreen.routeName: (context) => TraineeScreen(),
+          ExerciseWizard.routeName: (context) => ExerciseWizard(),
         },
       ),
     );

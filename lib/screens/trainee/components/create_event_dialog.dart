@@ -7,8 +7,9 @@ import 'package:intl/intl.dart';
 
 import 'package:flutter_app/assets/constants.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_app/screens/exercise-wizard/wizard-screen.dart';
 import './exercises_dropdown.dart';
-import '../../../components/week_day_dot.dart';
+import 'package:flutter_app/common_widgets/week_day_dot.dart';
 
 class ConfigureEventDialog extends StatefulWidget {
   final String title;
@@ -82,7 +83,7 @@ class _ConfigureEventDialogState extends State<ConfigureEventDialog> {
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
                         Navigator.of(context).pop();
-                        Navigator.pushNamed(context, '/exercise-wizard');
+                        Navigator.pushNamed(context, ExerciseWizard.routeName);
                 }),
               ],
             ),
