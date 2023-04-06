@@ -13,6 +13,7 @@ class CoachEventProvider extends ChangeNotifier {
   List<CoachEvent> get events => _events;
   bool isLoading = false;
   bool isCreatingLoading = false;
+  bool isUpdatingLoading = false;
   String errorMessage = '';
 
   Future<void> fetchEventsByDate(DateTime start, DateTime end) async {
@@ -61,6 +62,36 @@ class CoachEventProvider extends ChangeNotifier {
     } catch(e) {
       isCreatingLoading = false;
       print('CoachEventProvider createEvent error $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateEvent(CoachEvent event, DateTime start, DateTime end, List<String> selectedDays, bool useSmartFiller, String assigneeEmail) async {
+    try {
+      isUpdatingLoading = true;
+      notifyListeners();
+
+      final response = await NetworkService().patch(
+          '$apiUrl/coach-events/update/${event.id}',
+          body: {
+            'startDate': start.toString(),
+            'endDate': end.toString(),
+            'repeatDays': selectedDays,
+            'repeat': '',
+            'smartFiller': useSmartFiller,
+            'assigneeEmail': assigneeEmail
+          }
+      );
+
+      final CoachEvent result = CoachEvent.fromJson(response);
+
+      _events[_events.indexWhere((element) => element.id == event.id)] = result;
+
+      isUpdatingLoading = false;
+      notifyListeners();
+    } catch(e) {
+      isUpdatingLoading = false;
+      print('CoachEventProvider updateEvent error $e');
       rethrow;
     }
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/assets/constants.dart';
-import 'package:flutter_app/components/main_screen.dart';
+import 'package:flutter_app/common_widgets/main_screen.dart';
 import 'package:flutter_app/providers/trainee-event_provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
 import 'package:flutter_app/screens/trainee/components/event_card.dart';
@@ -12,10 +12,12 @@ import 'package:flutter_app/domains/gym_event_trainee.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_app/domains/sets.dart';
 import './components/create_event_dialog.dart';
+import './trainee_screen_arguments.dart';
 
 class TraineeScreen extends StatefulWidget {
-  final int? userId;
-  const TraineeScreen({Key? key, this.userId}) : super(key: key);
+  static const routeName = '/trainee-screen';
+
+  const TraineeScreen({Key? key}) : super(key: key);
 
   @override
   State<TraineeScreen> createState() => _TraineeScreenState();
@@ -24,7 +26,8 @@ class TraineeScreen extends StatefulWidget {
 class _TraineeScreenState extends State<TraineeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
-    final userId = widget.userId ?? context.read<UserProvider>().id;
+    final TraineeScreenArguments? args = ModalRoute.of(context)!.settings.arguments as TraineeScreenArguments?;
+    final userId = args?.userId ?? context.read<UserProvider>().id;
 
     return MainScreen(
         isLoading: context.watch<TraineeEventProvider>().isLoading,
@@ -80,7 +83,7 @@ class _TraineeScreenState extends State<TraineeScreen> with TickerProviderStateM
 
                                   final List<String> selectedDays = data['selectedDays'].map<String>((e) => weekDaysShort[e]).toList();
 
-                                  provider.createEventFromCatalog(data['id'], date, selectedDays, data['useSmartFiller']);
+                                  provider.createEventFromCatalog(data['id'], date, selectedDays, data['useSmartFiller'], userId);
                                 },
                               )
                           )

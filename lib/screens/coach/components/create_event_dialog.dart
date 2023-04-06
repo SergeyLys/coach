@@ -7,14 +7,14 @@ import 'package:intl/intl.dart';
 
 import 'package:flutter_app/assets/constants.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_app/components/week_day_dot.dart';
+import 'package:flutter_app/common_widgets/week_day_dot.dart';
 
 import '../../../providers/coach-event_provider.dart';
 
 class ConfigureCoachEventDialog extends StatefulWidget {
   final String title;
   final DateTime currentDate;
-  final Function onSubmitCallback;
+  final Function(CoachEvent? event, DateTime start, DateTime end, List<String> selectedDays, bool useSmartFiller, String assigneeEmail) onSubmitCallback;
   final TimeOfDay startTime;
   // final TimeOfDay? endTime;
   // final List<int>? selectedDays;
@@ -176,8 +176,7 @@ class _ConfigureCoachEventDialogState extends State<ConfigureCoachEventDialog> {
               final List<String> selectedDays = _selectedDays.map<String>((e) => weekDaysShort[e]).toList();
 
               try {
-                await context.read<CoachEventProvider>().createEvent(startDate, endDate, selectedDays, _useSmartFiller, assigneeNameController.text);
-                widget.onSubmitCallback();
+                widget.onSubmitCallback(widget.event, startDate, endDate, selectedDays, _useSmartFiller, assigneeNameController.text);
               } catch(e) {
                 if ((e as Map)['message'] != null) {
                   setState(() {

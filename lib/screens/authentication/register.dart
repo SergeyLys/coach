@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/screens/coach/coach_screen.dart';
+import 'package:flutter_app/screens/trainee/trainee_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/assets/constants.dart';
 import 'package:flutter_app/services/network_service.dart';
@@ -47,11 +49,11 @@ class _RegisterState extends State<Register> {
       final currentUserRole = context.read<UserProvider>().role;
 
       if (currentUserRole == 'TRAINEE') {
-        Navigator.pushReplacementNamed(context, '/trainee-screen');
+        Navigator.pushReplacementNamed(context, TraineeScreen.routeName);
       }
 
       if (currentUserRole == 'COACH') {
-        Navigator.pushReplacementNamed(context, '/coach-screen');
+        Navigator.pushReplacementNamed(context, CoachScreen.routeName);
       }
     } catch (error) {
       setState(() {

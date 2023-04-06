@@ -55,6 +55,12 @@ class EventCard extends StatefulWidget {
   final double initialTopOffset;
   final Function(CoachEvent event) onTap;
   final Function(CoachEvent event) onLongPress;
+  final Function(CoachEvent event, double top, double height) handleChangeEventRange;
+  final double width;
+  final double left;
+  final List<CoachEvent> events;
+  final DateTime currentDate;
+  // final Color bg;
 
   const EventCard(
       {Key? key,
@@ -64,6 +70,12 @@ class EventCard extends StatefulWidget {
       required this.initialTopOffset,
       required this.onTap,
       required this.onLongPress,
+      required this.handleChangeEventRange,
+      required this.width,
+      required this.left,
+      required this.events,
+      required this.currentDate,
+      // required this.bg,
       })
       : super(key: key);
 
@@ -77,9 +89,7 @@ class _EventCardState extends State<EventCard> {
   late double _bottomLimit;
   late double _duration;
   late double _height;
-  final double _left = 45;
   final double _minHeight = 15;
-  final double _width = 100;
 
   double cumulativeDy = 0;
 
@@ -99,18 +109,26 @@ class _EventCardState extends State<EventCard> {
 
   @override
   Widget build(BuildContext context) {
+    final cardWidth = widget.width;
+    final cardLeft = widget.left;
     return Stack(children: [
       Positioned(
         top: _top,
         height: _height,
-        left: _left,
+        left: cardLeft,
         child: GestureDetector(
           child: Container(
             height: _height,
-            width: _width,
-            color: Colors.lightGreenAccent,
-            child: const Center(
-              child: Text('Draggable'),
+            width: cardWidth,
+            // color: widget.bg,
+            decoration: BoxDecoration(
+              border: Border.all(
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Center(
+              child: Text('${widget.event.assignee.email} ${widget.event.id}'),
             ),
           ),
           onLongPress: () {
@@ -137,10 +155,9 @@ class _EventCardState extends State<EventCard> {
           },
         ),
       ),
-      // top middle
       Positioned(
         top: _top - dragPointSize / 2,
-        left: _left + _width / 2 - dragPointSize / 2,
+        left: cardLeft - 15 + cardWidth / 2 + dragPointSize / 2,
         width: dragPointSize,
         height: dragPointSize,
         child: ManipulatingBall(
@@ -154,6 +171,7 @@ class _EventCardState extends State<EventCard> {
                 _height = newHeight > 0 ? newHeight : 0;
                 cumulativeDy = 0;
               });
+              widget.handleChangeEventRange(widget.event, _top, _height);
             } else if (cumulativeDy <= -discreteStepSize) {
               setState(() {
                 var newHeight = _height - discreteStepSize;
@@ -161,14 +179,14 @@ class _EventCardState extends State<EventCard> {
                 _height = newHeight > 0 ? newHeight : 0;
                 cumulativeDy = 0;
               });
+              widget.handleChangeEventRange(widget.event, _top, _height);
             }
           },
         ),
       ),
-      // bottom center
       Positioned(
         top: _top + _height - dragPointSize / 2,
-        left: _left + _width / 2 - dragPointSize / 2,
+        left: cardLeft - 15 + cardWidth / 2 + dragPointSize / 2,
         child: ManipulatingBall(
           onDrag: (dy) {
             cumulativeDy += dy;
@@ -179,12 +197,14 @@ class _EventCardState extends State<EventCard> {
                 _height = newHeight > _minHeight ? newHeight : _minHeight;
                 cumulativeDy = 0;
               });
+              widget.handleChangeEventRange(widget.event, _top, _height);
             } else if (cumulativeDy <= -discreteStepSize) {
               setState(() {
                 var newHeight = _height - discreteStepSize;
                 _height = newHeight > _minHeight ? newHeight : _minHeight;
                 cumulativeDy = 0;
               });
+              widget.handleChangeEventRange(widget.event, _top, _height);
             }
           },
         ),

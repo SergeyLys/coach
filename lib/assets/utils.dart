@@ -59,3 +59,12 @@ double getClosestNumber(double input, List<double> source) {
   }
   return curr;
 }
+
+DateTime getTimeFromTimeline(DateTime currentDate, double position) {
+  double time = position / 60;
+  double fract = time - time.truncate();
+  int minutes = ((fract * 60 / 100) * 100).truncate();
+  int hours = time.truncate();
+
+  return DateTime(currentDate.year, currentDate.month, currentDate.day, hours, minutes);
+}

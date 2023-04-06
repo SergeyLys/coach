@@ -76,6 +76,12 @@ class _EventCardState extends State<EventCard> {
                                   .toString() : '',
                               onChangeCallback: (String value) {
                                 final val = value.isEmpty ? '0' : value;
+                                final hasDigits = RegExp(r'^[0-9]+$').hasMatch(val);
+
+                                if (!hasDigits) {
+                                  return;
+                                }
+
                                 setState(() {
                                   currentReps.weight = int.parse(val);
                                   _isUnsaved = true;
@@ -91,6 +97,12 @@ class _EventCardState extends State<EventCard> {
                               initialValue: currentReps.reps != null ? currentReps.reps.toString() : '',
                               onChangeCallback: (String value) {
                                 final val = value.isEmpty ? '0' : value;
+                                final hasDigits = RegExp(r'^[0-9]+$').hasMatch(val);
+
+                                if (!hasDigits) {
+                                  return;
+                                }
+
                                 setState(() {
                                   currentReps.reps = int.parse(val);
                                   _isUnsaved = true;
